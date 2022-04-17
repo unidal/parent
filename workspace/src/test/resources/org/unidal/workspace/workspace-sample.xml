@@ -1,0 +1,11 @@
+<workspace for="qmwu2000@gmail.com">
+	<project name="cat-studio">
+		<git-url>git://gitee.com/unidal/cat-studio.git</git-url>
+		<depend-on>
+			<project>frameworks</project>
+			<project>maven-plugins</project>
+			<project>test-frameworks</project>
+		</depend-on>
+	</project>
+	<project />
+</workspace>

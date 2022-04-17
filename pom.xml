@@ -8,6 +8,9 @@
 	<packaging>pom</packaging>
 	<name>Unidal Parent POM</name>
 	<url>https://gitee.com/unidal/parent</url>
+	<modules>
+		<module>workspace</module>
+	</modules>
 	<scm>
 		<connection>scm:git:git://gitee.com/unidal/parent.git</connection>
 		<developerConnection>scm:git:ssh://git@gitee.com/unidal/parent.git</developerConnection>

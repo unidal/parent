@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model model-package="org.unidal.workspace.model" enable-xml="true" enable-base-visitor="true">
+  <entity name="workspace" root="true">
+    <attribute name="for" value-type="String" />
+    <entity-ref name="project" type="map" names="projects" />
+  </entity>
+  <entity name="project">
+    <attribute name="name" value-type="String" key="true" />
+    <element name="git-url" value-type="String" />
+    <element name="text" value-type="String" text="true" />
+    <element name="order" value-type="int" primitive="true" render="false" />
+    <entity-ref name="project" type="list" names="depend-on" xml-indent="true" />
+  </entity>
+</model>
+
