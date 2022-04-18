@@ -1,22 +1,29 @@
 <workspace for="qmwu2000@gmail.com">
+	<project name="parent">
+		<git-url>git@gitee.com:unidal/parent.git</git-url>
+		<mvn-args>-N</mvn-args>
+	</project>
 	<project name="foundation">
-		<git-url>git://gitee.com/unidal/foundation.git</git-url>
+		<git-url>git@gitee.com:unidal/foundation.git</git-url>
+		<depend-on>
+			<project>parent</project>
+		</depend-on>
 	</project>
 	<project name="maven-plugins">
-		<git-url>git://gitee.com/unidal/maven-plugins.git</git-url>
+		<git-url>git@gitee.com:unidal/maven-plugins.git</git-url>
 		<depend-on>
 			<project>foundation</project>
 		</depend-on>
 	</project>
 	<project name="test-frameworks">
-		<git-url>git://gitee.com/unidal/test.git</git-url>
+		<git-url>git@gitee.com:unidal/test-frameworks.git</git-url>
 		<depend-on>
 			<project>foundation</project>
 			<project>maven-plugins</project>
 		</depend-on>
 	</project>
-	<project name="cat.java">
-		<git-url>git://gitee.com/unidal/cat.java.git</git-url>
+	<project name="cat2.java">
+		<git-url>git@gitee.com:unidal/cat2.java.git</git-url>
 		<depend-on>
 			<project>foundation</project>
 			<project>maven-plugins</project>
@@ -24,16 +31,16 @@
 		</depend-on>
 	</project>
 	<project name="frameworks">
-		<git-url>git://gitee.com/unidal/frameworks.git</git-url>
+		<git-url>git@gitee.com:unidal/frameworks.git</git-url>
 		<depend-on>
 			<project>foundation</project>
 			<project>maven-plugins</project>
 			<project>test-frameworks</project>
-			<project>cat.java</project>
+			<project>cat2.java</project>
 		</depend-on>
 	</project>
 	<project name="uml">
-		<git-url>git://gitee.com/unidal/uml.git</git-url>
+		<git-url>git@gitee.com:qmwu2000/uml.git</git-url>
 		<depend-on>
 			<project>frameworks</project>
 			<project>maven-plugins</project>
@@ -41,7 +48,7 @@
 		</depend-on>
 	</project>
 	<project name="tulip">
-		<git-url>git://gitee.com/unidal/tulip.git</git-url>
+		<git-url>git@gitee.com:unidal/tulip.git</git-url>
 		<depend-on>
 			<project>frameworks</project>
 			<project>maven-plugins</project>
@@ -49,15 +56,15 @@
 		</depend-on>
 	</project>
 	<project name="cat-next">
-		<git-url>git://gitee.com/unidal/cat-next.git</git-url>
+		<git-url>git@gitee.com:qmwu2000/cat-next.git</git-url>
 		<depend-on>
 			<project>frameworks</project>
 			<project>maven-plugins</project>
 			<project>test-frameworks</project>
 		</depend-on>
 	</project>
-	<project name="cat-studio">
-		<git-url>git://gitee.com/unidal/cat-studio.git</git-url>
+	<project name="cat-studio" enabled="false">
+		<git-url>git@gitee.com:unidal/cat-studio.git</git-url>
 		<depend-on>
 			<project>frameworks</project>
 			<project>maven-plugins</project>

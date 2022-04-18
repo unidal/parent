@@ -13,13 +13,21 @@ import org.unidal.workspace.model.IVisitor;
 public class Project extends BaseEntity<Project> {
    private String m_name;
 
+   private Boolean m_enabled = true;
+
    private String m_gitUrl;
+
+   private String m_mvnArgs;
 
    private String m_text;
 
    private List<Project> m_dependOn = new ArrayList<Project>();
 
    private transient int m_order;
+
+   private transient java.io.File m_baseDir;
+
+   private transient boolean m_error;
 
    public Project() {
    }
@@ -65,12 +73,28 @@ public class Project extends BaseEntity<Project> {
       return null;
    }
 
+   public java.io.File getBaseDir() {
+      return m_baseDir;
+   }
+
    public List<Project> getDependOn() {
       return m_dependOn;
    }
 
+   public Boolean getEnabled() {
+      return m_enabled;
+   }
+
+   public boolean getError() {
+      return m_error;
+   }
+
    public String getGitUrl() {
       return m_gitUrl;
+   }
+
+   public String getMvnArgs() {
+      return m_mvnArgs;
    }
 
    public String getName() {
@@ -94,10 +118,21 @@ public class Project extends BaseEntity<Project> {
       return hash;
    }
 
+   public boolean isEnabled() {
+      return m_enabled != null && m_enabled.booleanValue();
+   }
+
+   public boolean isError() {
+      return m_error;
+   }
+
    @Override
    public void mergeAttributes(Project other) {
       assertAttributeEquals(other, ENTITY_PROJECT, ATTR_NAME, m_name, other.getName());
 
+      if (other.getEnabled() != null) {
+         m_enabled = other.getEnabled();
+      }
    }
 
    public Project removeProject(String name) {
@@ -116,8 +151,28 @@ public class Project extends BaseEntity<Project> {
       return null;
    }
 
+   public Project setBaseDir(java.io.File baseDir) {
+      m_baseDir = baseDir;
+      return this;
+   }
+
+   public Project setEnabled(Boolean enabled) {
+      m_enabled = enabled;
+      return this;
+   }
+
+   public Project setError(boolean error) {
+      m_error = error;
+      return this;
+   }
+
    public Project setGitUrl(String gitUrl) {
       m_gitUrl = gitUrl;
+      return this;
+   }
+
+   public Project setMvnArgs(String mvnArgs) {
+      m_mvnArgs = mvnArgs;
       return this;
    }
 

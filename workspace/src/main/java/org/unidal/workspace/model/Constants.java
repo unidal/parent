@@ -3,11 +3,15 @@ package org.unidal.workspace.model;
 
 public class Constants {
 
+   public static final String ATTR_ENABLED = "enabled";
+
    public static final String ATTR_FOR = "for";
 
    public static final String ATTR_NAME = "name";
 
    public static final String ELEMENT_GIT_URL = "git-url";
+
+   public static final String ELEMENT_MVN_ARGS = "mvn-args";
 
    public static final String ELEMENT_TEXT = "text";
 

@@ -2,6 +2,7 @@
 package org.unidal.workspace.model.transform;
 
 import static org.unidal.workspace.model.Constants.ELEMENT_GIT_URL;
+import static org.unidal.workspace.model.Constants.ELEMENT_MVN_ARGS;
 
 import static org.unidal.workspace.model.Constants.ENTITY_PROJECT;
 import static org.unidal.workspace.model.Constants.ENTITY_WORKSPACE;
@@ -102,6 +103,8 @@ public class DefaultXmlParser extends DefaultHandler {
 
             if (ELEMENT_GIT_URL.equals(currentTag)) {
                project.setGitUrl(getText());
+            } else if (ELEMENT_MVN_ARGS.equals(currentTag)) {
+               project.setMvnArgs(getText());
             } else {
                project.setText(getText());
             }
@@ -116,7 +119,7 @@ public class DefaultXmlParser extends DefaultHandler {
    }
 
    private void parseForProject(Project parentObj, String parentTag, String qName, Attributes attributes) throws SAXException {
-      if (ELEMENT_GIT_URL.equals(qName) || ENTITY_DEPEND_ON.equals(qName)) {
+      if (ELEMENT_GIT_URL.equals(qName) || ELEMENT_MVN_ARGS.equals(qName) || ENTITY_DEPEND_ON.equals(qName)) {
          m_objs.push(parentObj);
       } else if (ENTITY_PROJECT.equals(qName)) {
          Project project_ = m_maker.buildProject(attributes);

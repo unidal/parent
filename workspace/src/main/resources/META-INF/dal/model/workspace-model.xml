@@ -6,9 +6,12 @@
   </entity>
   <entity name="project">
     <attribute name="name" value-type="String" key="true" />
+    <attribute name="enabled" value-type="boolean" default-value="true" />
     <element name="git-url" value-type="String" />
     <element name="text" value-type="String" text="true" />
     <element name="order" value-type="int" primitive="true" render="false" />
+    <element name="base-dir" value-type="java.io.File" render="false" />
+    <element name="error" value-type="boolean" primitive="true" render="false" />
     <entity-ref name="project" type="list" names="depend-on" xml-indent="true" />
   </entity>
 </model>

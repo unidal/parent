@@ -1,6 +1,7 @@
 <workspace for="qmwu2000@gmail.com">
-	<project name="cat-studio">
+	<project name="cat-studio" enabled="true">
 		<git-url>git://gitee.com/unidal/cat-studio.git</git-url>
+		<mvn-args>-N</mvn-args>
 		<depend-on>
 			<project>frameworks</project>
 			<project>maven-plugins</project>
