@@ -73,7 +73,7 @@ public class WorkspaceRunner extends Suite {
          if (!project.getBaseDir().exists()) {
             String url = project.getGitUrl();
 
-            return new JobForGit(project, "clone", "--progress", url, project.getName());
+            return new JobForGit(project, "clone", url, project.getName());
          } else {
             String message = String.format("Git repository(%s) is existed!", project.getName());
 
@@ -81,12 +81,12 @@ public class WorkspaceRunner extends Suite {
          }
       }
 
-      public Job buildMvnInstall(Project project) {
-         return new JobForMaven(project, "install", "-Dmaven.test.skip");
+      public Job buildMvnCleanAndInstall(Project project) {
+         return new JobForMaven(project, "clean", "install", "-Dmaven.test.skip");
       }
 
-      public Job buildMvnValidate(Project project) {
-         return new JobForMaven(project, "validate", "-q");
+      public Job buildMvnRunTests(Project project) {
+         return new JobForMaven(project, "test");
       }
 
       public Job checkSetupSSHKeys() {
@@ -453,9 +453,10 @@ public class WorkspaceRunner extends Suite {
          try {
             List<Runner> runners = new ArrayList<Runner>();
 
-            runners.add(new LeafRunner(name, "clone git repository", m_builder.buildGitClone(project), ignore));
-            runners.add(new LeafRunner(name, "validate maven POM", m_builder.buildMvnValidate(project), ignore));
-            runners.add(new LeafRunner(name, "build and install library", m_builder.buildMvnInstall(project), ignore));
+            runners.add(new LeafRunner(name, "clone the git repository", m_builder.buildGitClone(project), ignore));
+            runners.add(new LeafRunner(name, "clean install the artifacts", m_builder.buildMvnCleanAndInstall(project),
+                  ignore));
+            runners.add(new LeafRunner(name, "run the unit tests", m_builder.buildMvnRunTests(project), ignore));
 
             m_children.add(new NodeRunner("repository: " + name, runners));
          } catch (Exception e) {
