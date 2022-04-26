@@ -73,7 +73,7 @@ public class WorkspaceRunner extends Suite {
          if (!project.getBaseDir().exists()) {
             String url = project.getGitUrl();
 
-            return new JobForGit(project, "clone", url, project.getName());
+            return new JobForGitClone(project, url, project.getName());
          } else {
             String message = String.format("Git repository(%s) is existed!", project.getName());
 
@@ -81,12 +81,16 @@ public class WorkspaceRunner extends Suite {
          }
       }
 
-      public Job buildMvnCleanAndInstall(Project project) {
-         return new JobForMaven(project, "clean", "install", "-Dmaven.test.skip");
+      public Job buildJdkSelect(final Project project) {
+         return new JobForJdkSelect(project);
       }
 
-      public Job buildMvnRunTests(Project project) {
-         return new JobForMaven(project, "test");
+      public Job buildMvnInstall(Project project) {
+         return new JobForMavenInstall(project, "-Dmaven.test.skip");
+      }
+
+      public Job buildMvnTest(Project project) {
+         return new JobForMavenTest(project);
       }
 
       public Job checkSetupSSHKeys() {
@@ -106,13 +110,14 @@ public class WorkspaceRunner extends Suite {
       }
    }
 
-   private class JobForGit extends JobSupport {
+   private class JobForGitClone extends JobSupport {
       private List<String> m_args = new ArrayList<>();
 
-      public JobForGit(Project project, String... args) {
+      public JobForGitClone(Project project, String... args) {
          super(project);
 
          m_args.add("git");
+         m_args.add("clone");
 
          for (String arg : args) {
             m_args.add(arg);
@@ -131,19 +136,78 @@ public class WorkspaceRunner extends Suite {
       }
    }
 
-   private class JobForMaven extends JobSupport {
+   private class JobForJdkSelect extends JobSupport {
       private List<String> m_args = new ArrayList<>();
 
-      public JobForMaven(Project project, String... args) {
+      public JobForJdkSelect(Project project) {
          super(project);
+
+         m_args.add("jenv");
+         m_args.add("local");
+
+         if (project.getJdkVersion() != null) {
+            m_args.add(project.getJdkVersion());
+         }
+      }
+
+      @Override
+      public boolean run() throws Exception {
+         if (!checkPreconditions()) {
+            return false; // skip it
+         }
+
+         printCommandLine(m_args);
+
+         return execute(project().getBaseDir(), m_args);
+      }
+   }
+
+   private class JobForMavenInstall extends JobSupport {
+      private List<String> m_args = new ArrayList<>();
+
+      public JobForMavenInstall(Project project, String... args) {
+         super(project);
+
          m_args.add("mvn");
+         m_args.add("clean");
+         m_args.add("install");
 
          for (String arg : args) {
             m_args.add(arg);
          }
 
-         if (project.getMvnArgs() != null) {
-            m_args.add(project.getMvnArgs());
+         if (project.getMvnInstallArgs() != null) {
+            m_args.add(project.getMvnInstallArgs());
+         }
+      }
+
+      @Override
+      public boolean run() throws Exception {
+         if (!checkPreconditions()) {
+            return false; // skip it
+         }
+
+         printCommandLine(m_args);
+
+         return execute(project().getBaseDir(), m_args);
+      }
+   }
+
+   private class JobForMavenTest extends JobSupport {
+      private List<String> m_args = new ArrayList<>();
+
+      public JobForMavenTest(Project project, String... args) {
+         super(project);
+
+         m_args.add("mvn");
+         m_args.add("test");
+
+         for (String arg : args) {
+            m_args.add(arg);
+         }
+
+         if (project.getMvnTestArgs() != null) {
+            m_args.add(project.getMvnTestArgs());
          }
       }
 
@@ -448,15 +512,17 @@ public class WorkspaceRunner extends Suite {
          String name = project.getName();
          boolean ignore = !project.isEnabled();
 
-         project.setBaseDir(new File("/Users/qmwu2000/project/lab", name)); // TODO
+         project.setBaseDir(new File("/Users/qmwu2000/project/lab", name)); // TODO fix it later
 
          try {
             List<Runner> runners = new ArrayList<Runner>();
 
             runners.add(new LeafRunner(name, "clone the git repository", m_builder.buildGitClone(project), ignore));
-            runners.add(new LeafRunner(name, "clean install the artifacts", m_builder.buildMvnCleanAndInstall(project),
-                  ignore));
-            runners.add(new LeafRunner(name, "run the unit tests", m_builder.buildMvnRunTests(project), ignore));
+            runners.add(new LeafRunner(name, String.format("select JDK version(%s)", project.getJdkVersion()),
+                  m_builder.buildJdkSelect(project), ignore));
+            runners
+                  .add(new LeafRunner(name, "clean install the artifacts", m_builder.buildMvnInstall(project), ignore));
+            runners.add(new LeafRunner(name, "run the unit tests", m_builder.buildMvnTest(project), ignore));
 
             m_children.add(new NodeRunner("repository: " + name, runners));
          } catch (Exception e) {

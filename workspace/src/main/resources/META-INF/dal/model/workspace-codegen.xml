@@ -9,7 +9,10 @@
     <attribute name="name" value-type="String" />
     <attribute name="enabled" value-type="boolean" />
     <element name="git-url" value-type="String" />
-    <element name="mvn-args" value-type="String" />
+    <element name="git-clone-args" value-type="String" />
+    <element name="mvn-install-args" value-type="String" />
+    <element name="mvn-test-args" value-type="String" />
+    <element name="jdk-version" value-type="String" />
     <element name="text" value-type="String" text="true" />
     <entity-ref name="project" type="list" names="depend-on" xml-indent="true" />
   </entity>

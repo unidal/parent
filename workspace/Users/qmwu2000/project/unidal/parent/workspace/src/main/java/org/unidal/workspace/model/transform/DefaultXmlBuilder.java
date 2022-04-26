@@ -6,7 +6,6 @@ import static org.unidal.workspace.model.Constants.ATTR_FOR;
 import static org.unidal.workspace.model.Constants.ATTR_NAME;
 import static org.unidal.workspace.model.Constants.ELEMENT_GIT_CLONE_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_GIT_URL;
-import static org.unidal.workspace.model.Constants.ELEMENT_JDK_VERSION;
 import static org.unidal.workspace.model.Constants.ELEMENT_MVN_INSTALL_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_MVN_TEST_ARGS;
 import static org.unidal.workspace.model.Constants.ENTITY_DEPEND_ON;
@@ -276,8 +275,6 @@ public class DefaultXmlBuilder implements IVisitor {
       element(ELEMENT_MVN_INSTALL_ARGS, project.getMvnInstallArgs(), null,  true);
 
       element(ELEMENT_MVN_TEST_ARGS, project.getMvnTestArgs(), null,  true);
-
-      element(ELEMENT_JDK_VERSION, project.getJdkVersion(), null,  true);
 
       if (!project.getDependOn().isEmpty()) {
          startTag(ENTITY_DEPEND_ON);

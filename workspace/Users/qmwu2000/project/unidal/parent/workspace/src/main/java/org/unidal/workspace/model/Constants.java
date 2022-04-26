@@ -13,8 +13,6 @@ public class Constants {
 
    public static final String ELEMENT_GIT_URL = "git-url";
 
-   public static final String ELEMENT_JDK_VERSION = "jdk-version";
-
    public static final String ELEMENT_MVN_INSTALL_ARGS = "mvn-install-args";
 
    public static final String ELEMENT_MVN_TEST_ARGS = "mvn-test-args";

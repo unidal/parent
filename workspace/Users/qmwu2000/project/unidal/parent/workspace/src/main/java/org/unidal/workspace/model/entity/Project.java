@@ -23,8 +23,6 @@ public class Project extends BaseEntity<Project> {
 
    private String m_mvnTestArgs;
 
-   private String m_jdkVersion;
-
    private String m_text;
 
    private List<Project> m_dependOn = new ArrayList<Project>();
@@ -101,10 +99,6 @@ public class Project extends BaseEntity<Project> {
 
    public String getGitUrl() {
       return m_gitUrl;
-   }
-
-   public String getJdkVersion() {
-      return m_jdkVersion;
    }
 
    public String getMvnInstallArgs() {
@@ -191,11 +185,6 @@ public class Project extends BaseEntity<Project> {
 
    public Project setGitUrl(String gitUrl) {
       m_gitUrl = gitUrl;
-      return this;
-   }
-
-   public Project setJdkVersion(String jdkVersion) {
-      m_jdkVersion = jdkVersion;
       return this;
    }
 

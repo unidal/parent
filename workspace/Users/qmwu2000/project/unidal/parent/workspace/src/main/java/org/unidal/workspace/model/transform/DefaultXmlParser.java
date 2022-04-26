@@ -3,7 +3,6 @@ package org.unidal.workspace.model.transform;
 
 import static org.unidal.workspace.model.Constants.ELEMENT_GIT_CLONE_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_GIT_URL;
-import static org.unidal.workspace.model.Constants.ELEMENT_JDK_VERSION;
 import static org.unidal.workspace.model.Constants.ELEMENT_MVN_INSTALL_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_MVN_TEST_ARGS;
 
@@ -112,8 +111,6 @@ public class DefaultXmlParser extends DefaultHandler {
                project.setMvnInstallArgs(getText());
             } else if (ELEMENT_MVN_TEST_ARGS.equals(currentTag)) {
                project.setMvnTestArgs(getText());
-            } else if (ELEMENT_JDK_VERSION.equals(currentTag)) {
-               project.setJdkVersion(getText());
             } else {
                project.setText(getText());
             }
@@ -128,7 +125,7 @@ public class DefaultXmlParser extends DefaultHandler {
    }
 
    private void parseForProject(Project parentObj, String parentTag, String qName, Attributes attributes) throws SAXException {
-      if (ELEMENT_GIT_URL.equals(qName) || ELEMENT_GIT_CLONE_ARGS.equals(qName) || ELEMENT_MVN_INSTALL_ARGS.equals(qName) || ELEMENT_MVN_TEST_ARGS.equals(qName) || ELEMENT_JDK_VERSION.equals(qName) || ENTITY_DEPEND_ON.equals(qName)) {
+      if (ELEMENT_GIT_URL.equals(qName) || ELEMENT_GIT_CLONE_ARGS.equals(qName) || ELEMENT_MVN_INSTALL_ARGS.equals(qName) || ELEMENT_MVN_TEST_ARGS.equals(qName) || ENTITY_DEPEND_ON.equals(qName)) {
          m_objs.push(parentObj);
       } else if (ENTITY_PROJECT.equals(qName)) {
          Project project_ = m_maker.buildProject(attributes);

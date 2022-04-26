@@ -1,12 +1,15 @@
 <workspace for="qmwu2000@gmail.com">
-	<project name="cat-studio" enabled="true">
-		<git-url>git://gitee.com/unidal/cat-studio.git</git-url>
-		<mvn-args>-N</mvn-args>
-		<depend-on>
-			<project>frameworks</project>
-			<project>maven-plugins</project>
-			<project>test-frameworks</project>
-		</depend-on>
-	</project>
-	<project />
+   <project name="cat-studio" enabled="true">
+      <git-url>git://gitee.com/unidal/cat-studio.git</git-url>
+      <git-clone-args>--progress</git-clone-args>
+      <mvn-install-args>-N</mvn-install-args>
+      <mvn-test-args>-Dmaven.test.skip</mvn-test-args>
+      <jdk-version>1.8.0</jdk-version>
+      <depend-on>
+         <project>frameworks</project>
+         <project>maven-plugins</project>
+         <project>test-frameworks</project>
+      </depend-on>
+   </project>
+   <project />
 </workspace>
