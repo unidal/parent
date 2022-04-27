@@ -1,0 +1,44 @@
+<program>
+   <block name="check SSH keys" ignored="true">
+      <instrument type="checkSshKeys">
+      </instrument>
+   </block>
+   <block name="repository: parent">
+      <block name="clone the git repository">
+         <instrument type="message">
+            <property>Git repository(parent) is existed. NOOP!</property>
+         </instrument>
+         <instrument type="command">
+            <property>git</property>
+            <property>clone</property>
+            <property>git@gitee.com:unidal/parent.git</property>
+            <property>parent</property>
+         </instrument>
+      </block>
+      <block name="set JDK version to 1.8">
+         <instrument type="command">
+            <property>jenv</property>
+            <property>local</property>
+            <property>1.8</property>
+         </instrument>
+         <instrument type="command">
+            <property>jenv</property>
+            <property>version-name</property>
+         </instrument>
+      </block>
+      <block name="clean install the artifacts">
+         <instrument type="command">
+            <property>mvn</property>
+            <property>clean</property>
+            <property>install</property>
+            <property>-Dmaven.test.skip</property>
+         </instrument>
+      </block>
+      <block name="run the unit tests">
+         <instrument type="command">
+            <property>mvn</property>
+            <property>test</property>
+         </instrument>
+      </block>
+   </block>
+</program>

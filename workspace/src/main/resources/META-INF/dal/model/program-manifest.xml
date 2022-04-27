@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <file path="program-codegen.xml" />
+  <file path="program-model.xml" />
+</manifest>
+

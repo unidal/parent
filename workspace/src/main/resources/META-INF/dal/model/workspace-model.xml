@@ -8,7 +8,7 @@
     <attribute name="name" value-type="String" key="true" />
     <attribute name="enabled" value-type="boolean" default-value="true" />
     <element name="git-url" value-type="String" />
-    <element name="jdk-version" value-type="String" default-value="1.7" />
+    <element name="jdk-version" value-type="String" />
     <element name="text" value-type="String" text="true" />
     <element name="order" value-type="int" primitive="true" render="false" />
     <element name="base-dir" value-type="java.io.File" render="false" />

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model model-package="org.unidal.workspace.program" enable-xml="true" enable-base-visitor="true">
+   <entity name="program" root="true">
+      <entity-ref name="block" type="list" names="blocks" method-find-or-create="true" />
+   </entity>
+   <entity name="block" dynamic-attributes="true">
+      <attribute name="name" value-type="String" key="true" />
+      <entity-ref name="instrument" type="list" names="instruments" method-find-or-create="true" />
+      <entity-ref name="block" type="list" names="blocks" method-find-or-create="true" />
+      <snippet>
+         public Instrument newAction(String type) {
+            Instrument instrument = new Instrument().setType(type);
+   
+            m_instruments.add(instrument);
+            return instrument;
+         }
+
+         public Instrument newCommand() {
+            Instrument instrument = new Instrument().setType("command");
+   
+            m_instruments.add(instrument);
+            return instrument;
+         }
+
+         public Instrument newMessage() {
+            Instrument instrument = new Instrument().setType("message");
+   
+            m_instruments.add(instrument);
+            return instrument;
+         }
+      </snippet>
+   </entity>
+   <entity name="instrument" dynamic-attribute="true">
+      <attribute name="type" value-type="String" />
+      <element name="property" value-type="String" type="list" names="properties" />
+      <snippet>
+         public Instrument withProperties(String... properties) {
+         for (String property : properties) {
+         m_properties.add(property);
+         }
+
+         return this;
+         }
+      </snippet>
+   </entity>
+</model>
