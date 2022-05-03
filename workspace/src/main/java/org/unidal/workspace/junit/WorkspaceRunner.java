@@ -25,6 +25,7 @@ import org.junit.runners.model.TestClass;
 import org.unidal.workspace.Action;
 import org.unidal.workspace.ActionContext;
 import org.unidal.workspace.action.CheckSshKeys;
+import org.unidal.workspace.action.CheckUpdate;
 import org.unidal.workspace.action.CommandAction;
 import org.unidal.workspace.action.MessageAction;
 import org.unidal.workspace.model.WorkspaceHelper;
@@ -35,6 +36,31 @@ import org.unidal.workspace.program.entity.Block;
 import org.unidal.workspace.program.entity.Instrument;
 import org.unidal.workspace.program.entity.Program;
 
+/**
+ * A personal workspace setup tool driven by JUnit test driver either in IDE or maven command line.
+ * <p>
+ * 
+ * Following environments setup is required before the runner:
+ * <p>
+ * <li>JDK: Oracle JDK or Open JDK</li>
+ * <li>jenv: <a href="https://www.jenv.be/">jEnv</a> is a command line tool to help you forget how to set the JAVA_HOME environment
+ * variable</li>
+ * <li>git: <a href="https://git-scm.com/">Git</a> is a free and open source distributed version control system</li>
+ * <li>maven: <a href="http://maven.apache.org">Apache Maven</a> is a software project management and comprehension tool</li>
+ *
+ * 
+ * <p>
+ * Usage:
+ * 
+ * <code><pre>
+ * &#64;RunWith(WorkspaceRunner.class)
+ * public class SetupWorkspace {
+ * 
+ * }
+ * </pre></code>
+ * 
+ * @author qmwu2000
+ */
 public class WorkspaceRunner extends Suite {
    private static final String TARGET_DIRECTORY = "/Users/qmwu2000/project/lab";
 
@@ -64,6 +90,7 @@ public class WorkspaceRunner extends Suite {
       register(new CommandAction());
       register(new MessageAction());
       register(new CheckSshKeys());
+      register(new CheckUpdate());
    }
 
    private ActionContext buildContext(ActionContext parent, Block block) {
@@ -86,7 +113,12 @@ public class WorkspaceRunner extends Suite {
    @Override
    protected List<Runner> getChildren() {
       List<Runner> children = new ArrayList<Runner>();
-      ActionJobContext parent = new ActionJobContext(null);
+      ActionJobContext parent = new ActionJobContext(null) {
+         @Override
+         public ActionContext getParent() {
+            return this;
+         }
+      };
 
       for (Block block : m_program.getBlocks()) {
          ActionContext ctx = buildContext(parent, block);
@@ -125,7 +157,7 @@ public class WorkspaceRunner extends Suite {
       }
 
       public boolean run(ActionContext ctx) throws Exception {
-         if (ctx.hasError()) {
+         if (ctx.isMarkedAsError()) {
             return false; // skip it
          }
 
@@ -142,6 +174,8 @@ public class WorkspaceRunner extends Suite {
       private File m_baseDir;
 
       private boolean m_error;
+
+      private boolean m_ignored;
 
       public ActionJobContext(ActionContext parent) {
          m_parent = parent;
@@ -170,12 +204,32 @@ public class WorkspaceRunner extends Suite {
       }
 
       @Override
-      public boolean hasError() {
-         if (m_error || m_parent != null && m_parent.hasError()) {
-            return true;
-         } else {
-            return false;
+      public ActionContext getParent() {
+         return m_parent;
+      }
+
+      @Override
+      public boolean isMarkedAsError() {
+         return m_error || m_parent != null && m_parent.isMarkedAsError();
+      }
+
+      @Override
+      public boolean isMarkedAsIgnored() {
+         return m_ignored;
+      }
+
+      @Override
+      public void markAsError() {
+         m_error = true;
+
+         if (m_parent != null) {
+            m_parent.markAsError();
          }
+      }
+
+      @Override
+      public void markAsIgnored() {
+         m_ignored = true;
       }
 
       @Override
@@ -186,22 +240,12 @@ public class WorkspaceRunner extends Suite {
          System.out.println(message);
       }
 
-      @Override
       public void setBaseDir(File baseDir) {
          m_baseDir = baseDir;
       }
 
       public void setCategory(String category) {
          m_category = category;
-      }
-
-      @Override
-      public void setError(boolean error) {
-         if (m_parent != null) {
-            m_parent.setError(error);
-         } else {
-            m_error = error;
-         }
       }
    }
 
@@ -249,7 +293,7 @@ public class WorkspaceRunner extends Suite {
 
             notifier.fireTestRunFinished(new Result());
          } catch (Throwable e) {
-            m_ctx.setError(true);
+            m_ctx.getParent().markAsError();
             notifier.fireTestFailure(new Failure(getDescription(), e));
          } finally {
             notifier.fireTestFinished(getDescription());
@@ -258,6 +302,8 @@ public class WorkspaceRunner extends Suite {
    }
 
    private class NodeRunner extends ParentRunner<Runner> {
+      private ActionContext m_ctx;
+
       private Block m_block;
 
       private List<Runner> m_children = new ArrayList<>();
@@ -265,6 +311,7 @@ public class WorkspaceRunner extends Suite {
       public NodeRunner(ActionContext ctx, Block block) throws InitializationError {
          super(new TestClass(null));
 
+         m_ctx = ctx;
          m_block = block;
 
          for (Block child : m_block.getBlocks()) {
@@ -273,11 +320,7 @@ public class WorkspaceRunner extends Suite {
             if (child.getBlocks().isEmpty()) {
                m_children.add(new LeafRunner(cctx, child));
             } else {
-               try {
-                  m_children.add(new NodeRunner(cctx, child));
-               } catch (InitializationError e) {
-                  e.printStackTrace();
-               }
+               m_children.add(new NodeRunner(cctx, child));
             }
          }
       }
@@ -317,7 +360,11 @@ public class WorkspaceRunner extends Suite {
 
       @Override
       protected void runChild(Runner child, RunNotifier notifier) {
-         child.run(notifier);
+         if (m_ctx.isMarkedAsIgnored() || m_ctx.isMarkedAsError()) {
+            notifier.fireTestIgnored(child.getDescription());
+         } else {
+            child.run(notifier);
+         }
       }
    }
 
@@ -389,7 +436,8 @@ public class WorkspaceRunner extends Suite {
 
                step.newMessage().withProperties(message);
             } else {
-               Instrument inst = step.newCommand().withProperties("git", "clone", project.getGitUrl(), name);
+               String gitUrl = project.getGitUrl();
+               Instrument inst = step.newCommand().withProperties("git", "clone", "--depth", "1", gitUrl, name);
 
                step.setDynamicAttribute("baseDir", m_baseDir.getPath());
 
@@ -397,6 +445,13 @@ public class WorkspaceRunner extends Suite {
                   inst.addProperty(project.getGitCloneArgs());
                }
             }
+         }
+
+         // check update start
+         {
+            Block step = repo.findOrCreateBlock("check update start");
+
+            step.newAction("checkUpdate").addProperty("start");
          }
 
          // jdk version
@@ -427,13 +482,23 @@ public class WorkspaceRunner extends Suite {
                inst.addProperty(project.getMvnTestArgs());
             }
          }
+
+         // check update end
+         {
+            Block step = repo.findOrCreateBlock("check update end");
+
+            step.newAction("checkUpdate").addProperty("end");
+         }
       }
 
       @Override
       public void visitWorkspace(Workspace workspace) {
-         Block block = m_program.findOrCreateBlock("check SSH keys");
+         // check SSH keys
+         {
+            Block block = m_program.findOrCreateBlock("check SSH keys");
 
-         block.newAction("checkSshKeys");
+            block.newAction("checkSshKeys");
+         }
 
          List<Project> projects = getSortedProjects(workspace);
 

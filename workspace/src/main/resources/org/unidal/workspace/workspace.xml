@@ -80,6 +80,26 @@
          <project>maven-plugins</project>
          <project>test-frameworks</project>
       </depend-on>
+      <jdk-version>1.8</jdk-version>
+   </project>
+   <project name="cat2" enabled="false">
+      <git-url>git@gitee.com:unidal/cat2.git</git-url>
+      <mvn-test-args>-fae</mvn-test-args>
+      <depend-on>
+         <project>frameworks</project>
+         <project>maven-plugins</project>
+         <project>test-frameworks</project>
+      </depend-on>
       <jdk-version>17</jdk-version>
+   </project>
+   <project name="cat2.portal" enabled="false">
+      <git-url>git@gitee.com:unidal/cat2.portal.git</git-url>
+      <mvn-test-args>-fae</mvn-test-args>
+      <depend-on>
+         <project>frameworks</project>
+         <project>maven-plugins</project>
+         <project>test-frameworks</project>
+      </depend-on>
+      <jdk-version>1.8</jdk-version>
    </project>
 </workspace>

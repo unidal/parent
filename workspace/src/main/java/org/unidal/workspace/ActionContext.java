@@ -7,11 +7,15 @@ public interface ActionContext {
 
    public String getCategory();
 
-   public boolean hasError();
+   public ActionContext getParent();
+
+   public boolean isMarkedAsError();
+
+   public boolean isMarkedAsIgnored();
+
+   public void markAsError();
+
+   public void markAsIgnored();
 
    public void print(String line);
-
-   public void setBaseDir(File baseDir);
-
-   public void setError(boolean error);
 }

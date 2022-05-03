@@ -24,7 +24,6 @@ public class CommandAction implements Action {
       try {
          waitFor(ctx, process);
       } catch (Exception e) {
-         ctx.setError(true);
          throw e;
       } finally {
          long ms = (System.currentTimeMillis() - start);
