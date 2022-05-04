@@ -8,10 +8,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import org.junit.AssumptionViolatedException;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.Runner;
@@ -177,6 +180,8 @@ public class WorkspaceRunner extends Suite {
 
       private boolean m_ignored;
 
+      private Set<String> m_failedBlocks = new HashSet<>();
+
       public ActionJobContext(ActionContext parent) {
          m_parent = parent;
       }
@@ -209,6 +214,21 @@ public class WorkspaceRunner extends Suite {
       }
 
       @Override
+      public boolean isAnyDependencyFailed(List<String> ids) {
+         for (String id : ids) {
+            if (m_failedBlocks.contains(id)) {
+               return true;
+            }
+         }
+
+         if (m_parent != null) {
+            return m_parent.isAnyDependencyFailed(ids);
+         }
+
+         return false;
+      }
+
+      @Override
       public boolean isMarkedAsError() {
          return m_error || m_parent != null && m_parent.isMarkedAsError();
       }
@@ -219,11 +239,15 @@ public class WorkspaceRunner extends Suite {
       }
 
       @Override
-      public void markAsError() {
+      public void markAsError(String id) {
          m_error = true;
 
          if (m_parent != null) {
-            m_parent.markAsError();
+            m_parent.markAsError(id);
+         }
+
+         if (id != null) {
+            m_failedBlocks.add(id);
          }
       }
 
@@ -293,7 +317,7 @@ public class WorkspaceRunner extends Suite {
 
             notifier.fireTestRunFinished(new Result());
          } catch (Throwable e) {
-            m_ctx.getParent().markAsError();
+            m_ctx.getParent().markAsError(m_block.getId());
             notifier.fireTestFailure(new Failure(getDescription(), e));
          } finally {
             notifier.fireTestFinished(getDescription());
@@ -342,26 +366,36 @@ public class WorkspaceRunner extends Suite {
 
       @Override
       public void run(RunNotifier notifier) {
-         CountDownLatch latch = new CountDownLatch(m_children.size());
+         if (m_ctx.isAnyDependencyFailed(m_block.getDependOns())) {
+            Failure failure = new Failure(getDescription(), new AssumptionViolatedException("SKIPPED"));
 
-         notifier.addListener(new RunListener() {
-            @Override
-            public void testIgnored(Description description) throws Exception {
-               latch.countDown();
+            notifier.fireTestAssumptionFailed(failure);
+         } else {
+            CountDownLatch latch = new CountDownLatch(m_children.size());
+
+            notifier.addListener(new RunListener() {
+               @Override
+               public void testIgnored(Description description) throws Exception {
+                  latch.countDown();
+               }
+            });
+
+            super.run(notifier);
+
+            if (latch.getCount() == 0) { // all children are ignored
+               notifier.fireTestIgnored(getDescription());
             }
-         });
-
-         super.run(notifier);
-
-         if (latch.getCount() == 0) { // all children are ignored
-            notifier.fireTestIgnored(getDescription());
          }
       }
 
       @Override
       protected void runChild(Runner child, RunNotifier notifier) {
-         if (m_ctx.isMarkedAsIgnored() || m_ctx.isMarkedAsError()) {
+         if (m_ctx.isMarkedAsIgnored()) {
             notifier.fireTestIgnored(child.getDescription());
+         } else if (m_ctx.isMarkedAsError()) {
+            Failure failure = new Failure(child.getDescription(), new AssumptionViolatedException("SKIPPED"));
+
+            notifier.fireTestAssumptionFailed(failure);
          } else {
             child.run(notifier);
          }
@@ -424,8 +458,13 @@ public class WorkspaceRunner extends Suite {
          Block repo = m_program.findOrCreateBlock("repository: " + name);
          File baseDir = new File(m_baseDir, name);
 
+         repo.setId(name);
          repo.setDynamicAttribute("category", name);
          repo.setDynamicAttribute("baseDir", baseDir.getPath());
+
+         for (Project p : project.getDependOn()) {
+            repo.addDependOn(p.getName());
+         }
 
          // git clone
          {

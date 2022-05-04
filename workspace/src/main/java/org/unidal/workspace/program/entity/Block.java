@@ -17,6 +17,10 @@ public class Block extends BaseEntity<Block> {
 
    private Boolean m_ignored;
 
+   private String m_id;
+
+   private List<String> m_dependOns = new ArrayList<String>();
+
    private List<Instrument> m_instruments = new ArrayList<Instrument>();
 
    private List<Block> m_blocks = new ArrayList<Block>();
@@ -37,6 +41,11 @@ public class Block extends BaseEntity<Block> {
 
    public Block addBlock(Block block) {
       m_blocks.add(block);
+      return this;
+   }
+
+   public Block addDependOn(String dependOn) {
+      m_dependOns.add(dependOn);
       return this;
    }
 
@@ -101,6 +110,14 @@ public class Block extends BaseEntity<Block> {
       return m_blocks;
    }
 
+   public List<String> getDependOns() {
+      return m_dependOns;
+   }
+
+   public String getId() {
+      return m_id;
+   }
+
    public Boolean getIgnored() {
       return m_ignored;
    }
@@ -137,6 +154,10 @@ public class Block extends BaseEntity<Block> {
       if (other.getIgnored() != null) {
          m_ignored = other.getIgnored();
       }
+
+      if (other.getId() != null) {
+         m_id = other.getId();
+      }
    }
 
    public Block removeBlock(String name) {
@@ -157,6 +178,11 @@ public class Block extends BaseEntity<Block> {
 
    public Block setDynamicAttribute(String name, String value) {
       m_dynamicAttributes.put(name, value);
+      return this;
+   }
+
+   public Block setId(String id) {
+      m_id = id;
       return this;
    }
 

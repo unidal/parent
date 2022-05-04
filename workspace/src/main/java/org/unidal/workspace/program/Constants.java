@@ -3,11 +3,17 @@ package org.unidal.workspace.program;
 
 public class Constants {
 
+   public static final String ATTR_ID = "id";
+
    public static final String ATTR_IGNORED = "ignored";
 
    public static final String ATTR_NAME = "name";
 
    public static final String ATTR_TYPE = "type";
+
+   public static final String ELEMENT_DEPEND_ON = "depend-on";
+
+   public static final String ELEMENT_DEPEND_ONS = "depend-ons";
 
    public static final String ELEMENT_PROPERTY = "property";
 

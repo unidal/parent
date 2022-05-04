@@ -17,11 +17,11 @@ public class WorkspaceHelper {
       return new DefaultXmlBuilder().build(entity);
    }
 
-   public static <T extends IEntity<T>> T fromXml(Class<T> entityType, InputStream in) throws IOException {
+   public static <T extends IEntity<?>> T fromXml(Class<T> entityType, InputStream in) throws IOException {
       return new DefaultXmlParser().parse(entityType, new InputSource(withoutBom(in)));
    }
 
-   public static <T extends IEntity<T>> T fromXml(Class<T> entityType, String xml) throws IOException {
+   public static <T extends IEntity<?>> T fromXml(Class<T> entityType, String xml) throws IOException {
       return new DefaultXmlParser().parse(entityType, new InputSource(new StringReader(xml)));
    }
 

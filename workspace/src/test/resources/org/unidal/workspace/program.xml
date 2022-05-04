@@ -3,7 +3,7 @@
       <instrument type="checkSshKeys">
       </instrument>
    </block>
-   <block name="repository: parent">
+   <block id="parent" name="repository: parent">
       <block name="clone the git repository">
          <instrument type="message">
             <property>Git repository(parent) is existed. NOOP!</property>
@@ -40,5 +40,10 @@
             <property>test</property>
          </instrument>
       </block>
+   </block>
+   <block id="cat" name="repository: cat">
+      <depend-on>frameworks</depend-on>
+      <depend-on>maven-plugins</depend-on>
+      <depend-on>test-frameworks</depend-on>
    </block>
 </program>
