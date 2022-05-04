@@ -12,14 +12,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.Failure;
-import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.Suite;
@@ -159,13 +157,8 @@ public class WorkspaceRunner extends Suite {
          }
       }
 
-      public boolean run(ActionContext ctx) throws Exception {
-         if (ctx.isMarkedAsError()) {
-            return false; // skip it
-         }
-
+      public void run(ActionContext ctx) throws Exception {
          m_action.execute(ctx, m_args);
-         return true;
       }
    }
 
@@ -309,7 +302,9 @@ public class WorkspaceRunner extends Suite {
                notifier.fireTestIgnored(getDescription());
             } else {
                for (ActionJob job : jobs) {
-                  if (!job.run(m_ctx)) {
+                  job.run(m_ctx);
+
+                  if (m_ctx.isMarkedAsIgnored()) {
                      notifier.fireTestIgnored(getDescription());
                   }
                }
@@ -330,6 +325,10 @@ public class WorkspaceRunner extends Suite {
 
       private Block m_block;
 
+      private List<ActionJob> m_jobsBefore = new ArrayList<>();
+
+      private List<ActionJob> m_jobsAfter = new ArrayList<>();
+
       private List<Runner> m_children = new ArrayList<>();
 
       public NodeRunner(ActionContext ctx, Block block) throws InitializationError {
@@ -337,6 +336,18 @@ public class WorkspaceRunner extends Suite {
 
          m_ctx = ctx;
          m_block = block;
+
+         for (Instrument instrument : m_block.getInstruments()) {
+            String order = instrument.getOrder();
+
+            if ("before".equals(order)) {
+               m_jobsBefore.add(new ActionJob(instrument.getType(), instrument.getProperties()));
+            } else if ("after".equals(order)) {
+               m_jobsAfter.add(new ActionJob(instrument.getType(), instrument.getProperties()));
+            } else {
+               throw new RuntimeException(String.format("Unknown order(%s) of instrument: %s", order, instrument));
+            }
+         }
 
          for (Block child : m_block.getBlocks()) {
             ActionContext cctx = buildContext(ctx, child);
@@ -370,21 +381,30 @@ public class WorkspaceRunner extends Suite {
             Failure failure = new Failure(getDescription(), new AssumptionViolatedException("SKIPPED"));
 
             notifier.fireTestAssumptionFailed(failure);
-         } else {
-            CountDownLatch latch = new CountDownLatch(m_children.size());
+         } else if (m_jobsBefore.size() + m_jobsAfter.size() > 0) {
+            for (ActionJob job : m_jobsBefore) {
+               try {
+                  job.run(m_ctx);
+               } catch (Exception e) {
+                  m_ctx.markAsError(m_block.getId());
 
-            notifier.addListener(new RunListener() {
-               @Override
-               public void testIgnored(Description description) throws Exception {
-                  latch.countDown();
+                  notifier.fireTestAssumptionFailed(new Failure(getDescription(), e));
                }
-            });
+            }
 
             super.run(notifier);
 
-            if (latch.getCount() == 0) { // all children are ignored
-               notifier.fireTestIgnored(getDescription());
+            for (ActionJob job : m_jobsAfter) {
+               try {
+                  job.run(m_ctx);
+               } catch (Exception e) {
+                  m_ctx.markAsError(m_block.getId());
+
+                  notifier.fireTestAssumptionFailed(new Failure(getDescription(), e));
+               }
             }
+         } else {
+            super.run(notifier);
          }
       }
 
@@ -471,7 +491,7 @@ public class WorkspaceRunner extends Suite {
             Block step = repo.findOrCreateBlock("clone the git repository");
 
             if (baseDir.exists()) {
-               String message = String.format("Git repository(%s) is already existed.", name);
+               String message = String.format("Git repository(%s) exists.", name);
 
                step.newMessage().withProperties(message);
             } else {
@@ -486,47 +506,41 @@ public class WorkspaceRunner extends Suite {
             }
          }
 
-         // check update start
+         // code and test
          {
-            Block step = repo.findOrCreateBlock("check update start");
+            Block codeAndTest = repo.findOrCreateBlock("make code and run tests");
 
-            step.newAction("checkUpdate").addProperty("start");
-         }
+            codeAndTest.newAction("checkUpdate").setOrder("before").addProperty("start");
+            codeAndTest.newAction("checkUpdate").setOrder("after").addProperty("end");
 
-         // jdk version
-         {
-            Block step = repo.findOrCreateBlock("set JDK version to " + project.getJdkVersion());
+            // jdk version
+            {
+               Block step = codeAndTest.findOrCreateBlock("set JDK version to " + project.getJdkVersion());
 
-            step.newCommand().withProperties("jenv", "local", project.getJdkVersion());
-            step.newCommand().withProperties("jenv", "version-name");
-         }
-
-         // mvn install
-         {
-            Block step = repo.findOrCreateBlock("clean install the artifacts");
-            Instrument inst = step.newCommand().withProperties("mvn", "clean", "install", "-Dmaven.test.skip");
-
-            if (project.getMvnInstallArgs() != null) {
-               inst.addProperty(project.getMvnInstallArgs());
+               step.newCommand().withProperties("jenv", "local", project.getJdkVersion());
+               step.newCommand().withProperties("jenv", "version-name");
             }
-         }
 
-         // mvn test
-         {
-            Block step = repo.findOrCreateBlock("run the unit tests");
+            // mvn install
+            {
+               Block step = codeAndTest.findOrCreateBlock("clean install the artifacts");
+               Instrument inst = step.newCommand().withProperties("mvn", "clean", "install", "-Dmaven.test.skip");
 
-            Instrument inst = step.newCommand().withProperties("mvn", "test");
-
-            if (project.getMvnTestArgs() != null) {
-               inst.addProperty(project.getMvnTestArgs());
+               if (project.getMvnInstallArgs() != null) {
+                  inst.addProperty(project.getMvnInstallArgs());
+               }
             }
-         }
 
-         // check update end
-         {
-            Block step = repo.findOrCreateBlock("check update end");
+            // mvn test
+            {
+               Block step = codeAndTest.findOrCreateBlock("run the unit tests");
 
-            step.newAction("checkUpdate").addProperty("end");
+               Instrument inst = step.newCommand().withProperties("mvn", "test");
+
+               if (project.getMvnTestArgs() != null) {
+                  inst.addProperty(project.getMvnTestArgs());
+               }
+            }
          }
       }
 

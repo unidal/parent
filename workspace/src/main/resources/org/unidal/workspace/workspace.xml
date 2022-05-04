@@ -2,6 +2,7 @@
    <project name="parent">
       <git-url>git@gitee.com:unidal/parent.git</git-url>
       <mvn-install-args>-N</mvn-install-args>
+      <mvn-test-args>-N</mvn-test-args>
       <jdk-version>1.8</jdk-version>
    </project>
    <project name="foundation">

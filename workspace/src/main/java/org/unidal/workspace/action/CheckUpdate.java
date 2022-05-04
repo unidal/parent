@@ -34,10 +34,8 @@ public class CheckUpdate implements Action {
             String second = lines.get(1);
 
             if (first.equals(commitId) && second.equals("OK")) {
-               ctx.print("No source update found");
-
-               // all rest sibling are ignored
-               ctx.getParent().markAsIgnored();
+               ctx.print("No source update.");
+               ctx.markAsIgnored();
                return;
             }
          }

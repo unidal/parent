@@ -4,6 +4,7 @@ package org.unidal.workspace.program.transform;
 import static org.unidal.workspace.program.Constants.ATTR_ID;
 import static org.unidal.workspace.program.Constants.ATTR_IGNORED;
 import static org.unidal.workspace.program.Constants.ATTR_NAME;
+import static org.unidal.workspace.program.Constants.ATTR_ORDER;
 import static org.unidal.workspace.program.Constants.ATTR_TYPE;
 import static org.unidal.workspace.program.Constants.ELEMENT_DEPEND_ON;
 import static org.unidal.workspace.program.Constants.ELEMENT_PROPERTY;
@@ -287,7 +288,7 @@ public class DefaultXmlBuilder implements IVisitor {
 
    @Override
    public void visitInstrument(Instrument instrument) {
-      startTag(ENTITY_INSTRUMENT, null, ATTR_TYPE, instrument.getType());
+      startTag(ENTITY_INSTRUMENT, null, ATTR_TYPE, instrument.getType(), ATTR_ORDER, instrument.getOrder());
 
       if (!instrument.getProperties().isEmpty()) {
          for (String property : instrument.getProperties()) {

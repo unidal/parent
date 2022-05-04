@@ -4,6 +4,7 @@ package org.unidal.workspace.program.transform;
 import static org.unidal.workspace.program.Constants.ATTR_ID;
 import static org.unidal.workspace.program.Constants.ATTR_IGNORED;
 import static org.unidal.workspace.program.Constants.ATTR_NAME;
+import static org.unidal.workspace.program.Constants.ATTR_ORDER;
 import static org.unidal.workspace.program.Constants.ATTR_TYPE;
 
 import java.util.Map;
@@ -52,10 +53,15 @@ public class DefaultXmlMaker {
 
    public Instrument buildInstrument(Attributes attributes) {
       String type = attributes.getValue(ATTR_TYPE);
+      String order = attributes.getValue(ATTR_ORDER);
       Instrument instrument = new Instrument();
 
       if (type != null) {
          instrument.setType(type);
+      }
+
+      if (order != null) {
+         instrument.setOrder(order);
       }
 
       return instrument;

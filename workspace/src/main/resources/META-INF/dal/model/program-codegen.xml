@@ -10,10 +10,11 @@
     <attribute name="id" value-type="String" />
     <element name="depend-on" value-type="String" type="list" names="depend-ons" />
     <entity-ref name="instrument" type="list" names="instruments" />
-    <entity-ref name="block" />
+    <entity-ref name="block" type="list" names="blocks" />
   </entity>
   <entity name="instrument">
     <attribute name="type" value-type="String" />
+    <attribute name="order" value-type="String" />
     <element name="property" value-type="String" type="list" names="properties" />
   </entity>
 </model>

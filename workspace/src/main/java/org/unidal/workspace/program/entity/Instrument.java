@@ -10,6 +10,8 @@ import org.unidal.workspace.program.IVisitor;
 public class Instrument extends BaseEntity<Instrument> {
    private String m_type;
 
+   private String m_order;
+
    private List<String> m_properties = new ArrayList<String>();
 
    public Instrument() {
@@ -34,6 +36,10 @@ public class Instrument extends BaseEntity<Instrument> {
             return false;
          }
 
+         if (!equals(getOrder(), _o.getOrder())) {
+            return false;
+         }
+
          if (!equals(getProperties(), _o.getProperties())) {
             return false;
          }
@@ -43,6 +49,10 @@ public class Instrument extends BaseEntity<Instrument> {
       }
 
       return false;
+   }
+
+   public String getOrder() {
+      return m_order;
    }
 
    public List<String> getProperties() {
@@ -58,6 +68,7 @@ public class Instrument extends BaseEntity<Instrument> {
       int hash = 0;
 
       hash = hash * 31 + (m_type == null ? 0 : m_type.hashCode());
+      hash = hash * 31 + (m_order == null ? 0 : m_order.hashCode());
       for (String e : m_properties) {
          hash = hash * 31 + (e == null ? 0 :e.hashCode());
       }
@@ -71,6 +82,15 @@ public class Instrument extends BaseEntity<Instrument> {
       if (other.getType() != null) {
          m_type = other.getType();
       }
+
+      if (other.getOrder() != null) {
+         m_order = other.getOrder();
+      }
+   }
+
+   public Instrument setOrder(String order) {
+      m_order = order;
+      return this;
    }
 
    public Instrument setType(String type) {
