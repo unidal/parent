@@ -22,7 +22,7 @@ import org.unidal.workspace.ActionContext;
 public class CheckUpdate implements Action {
    public void execute(ActionContext ctx, List<String> args) throws Exception {
       String type = args.get(0);
-      File file = new File(ctx.getBaseDir(), "status.txt");
+      File file = new File(ctx.getBaseDir(), "build.txt");
       Path path = file.toPath();
       List<String> lines = file.exists() ? Files.readAllLines(path) : Collections.emptyList();
 
@@ -51,17 +51,14 @@ public class CheckUpdate implements Action {
    }
 
    private String getLastCommitId(ActionContext ctx) throws IOException, InterruptedException {
-      String[] args = { "git", "log", "--oneline" };
+      String[] args = { "git", "rev-parse", "--short", "HEAD" };
       Process process = new ProcessBuilder(args).directory(ctx.getBaseDir()).redirectErrorStream(true).start();
       List<String> lines = waitFor(process);
 
       if (lines.size() > 0) {
          String first = lines.get(0);
-         int pos = first.indexOf(' ');
 
-         if (pos > 0) {
-            return first.substring(0, pos);
-         }
+         return first;
       }
 
       return null;
