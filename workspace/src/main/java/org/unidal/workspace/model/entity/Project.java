@@ -19,6 +19,8 @@ public class Project extends BaseEntity<Project> {
 
    private String m_gitCloneArgs;
 
+   private String m_gitPullArgs;
+
    private String m_mvnInstallArgs;
 
    private String m_mvnTestArgs;
@@ -97,6 +99,10 @@ public class Project extends BaseEntity<Project> {
 
    public String getGitCloneArgs() {
       return m_gitCloneArgs;
+   }
+
+   public String getGitPullArgs() {
+      return m_gitPullArgs;
    }
 
    public String getGitUrl() {
@@ -186,6 +192,11 @@ public class Project extends BaseEntity<Project> {
 
    public Project setGitCloneArgs(String gitCloneArgs) {
       m_gitCloneArgs = gitCloneArgs;
+      return this;
+   }
+
+   public Project setGitPullArgs(String gitPullArgs) {
+      m_gitPullArgs = gitPullArgs;
       return this;
    }
 

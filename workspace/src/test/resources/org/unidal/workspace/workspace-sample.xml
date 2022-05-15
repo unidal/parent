@@ -2,6 +2,7 @@
    <project name="cat-studio" enabled="true">
       <git-url>git://gitee.com/unidal/cat-studio.git</git-url>
       <git-clone-args>--progress</git-clone-args>
+      <git-pull-args>--quiet</git-pull-args>
       <mvn-install-args>-N</mvn-install-args>
       <mvn-test-args>-Dmaven.test.skip</mvn-test-args>
       <jdk-version>1.8.0</jdk-version>

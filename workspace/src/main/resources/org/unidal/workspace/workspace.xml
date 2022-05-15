@@ -25,7 +25,7 @@
          <project>foundation</project>
          <project>maven-plugins</project>
       </depend-on>
-      <jdk-version>11</jdk-version>
+      <jdk-version>17</jdk-version>
    </project>
    <project name="cat2.java">
       <git-url>git@gitee.com:unidal/cat2.java.git</git-url>
@@ -63,7 +63,7 @@
          <project>maven-plugins</project>
          <project>test-frameworks</project>
       </depend-on>
-      <jdk-version>11</jdk-version>
+      <jdk-version>17</jdk-version>
    </project>
    <project name="cat-next">
       <git-url>git@gitee.com:qmwu2000/cat-next.git</git-url>

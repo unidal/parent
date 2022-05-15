@@ -11,6 +11,8 @@ public class Constants {
 
    public static final String ELEMENT_GIT_CLONE_ARGS = "git-clone-args";
 
+   public static final String ELEMENT_GIT_PULL_ARGS = "git-pull-args";
+
    public static final String ELEMENT_GIT_URL = "git-url";
 
    public static final String ELEMENT_JDK_VERSION = "jdk-version";
