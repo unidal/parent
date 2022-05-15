@@ -63,7 +63,7 @@
          <project>maven-plugins</project>
          <project>test-frameworks</project>
       </depend-on>
-      <jdk-version>17</jdk-version>
+      <jdk-version>1.8</jdk-version>
    </project>
    <project name="cat-next">
       <git-url>git@gitee.com:qmwu2000/cat-next.git</git-url>

@@ -7,7 +7,23 @@
       <attribute name="name" value-type="String" key="true" />
       <entity-ref name="instrument" type="list" names="instruments" method-find-or-create="true" />
       <entity-ref name="block" type="list" names="blocks" method-find-or-create="true" />
-      <snippet>
+      <element name="parent" value-type="Block" render="false" />
+      <snippet><![CDATA[
+         public Block getChildBlock(String name) {
+            Block child = findOrCreateBlock(name);
+
+            child.setParent(this);
+            return child;
+         }
+
+         public List<String> getProjectDependOns() {
+            if (m_id != null) {
+               return m_dependOns;
+            } else {
+               return m_parent.getDependOns();
+            }
+         }
+
          public Instrument newAction(String type) {
             Instrument instrument = new Instrument().setType(type);
    
@@ -28,7 +44,7 @@
             m_instruments.add(instrument);
             return instrument;
          }
-      </snippet>
+      ]]></snippet>
    </entity>
    <entity name="instrument" dynamic-attribute="true">
       <attribute name="type" value-type="String" />

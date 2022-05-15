@@ -86,7 +86,7 @@ public class WorkspaceRunner extends Suite {
 	private static class ActionJobContext implements ActionContext {
 		private ActionContext m_parent;
 
-		private String m_category;
+		private String m_project;
 
 		private File m_baseDir;
 
@@ -96,9 +96,11 @@ public class WorkspaceRunner extends Suite {
 
 		private boolean m_ignored;
 
-		private Set<String> m_failedBlocks = new HashSet<>();
+		private Set<String> m_failedProjects = new HashSet<>();
 
-		private Set<String> m_updatedBlocks = new HashSet<>();
+		private Set<String> m_updatedProjects = new HashSet<>();
+
+		private StringBuilder m_out = new StringBuilder(1024);
 
 		public ActionJobContext(ActionContext parent) {
 			m_parent = parent;
@@ -116,11 +118,11 @@ public class WorkspaceRunner extends Suite {
 		}
 
 		@Override
-		public String getCategory() {
-			if (m_category != null) {
-				return m_category;
+		public String getProject() {
+			if (m_project != null) {
+				return m_project;
 			} else if (m_parent != null) {
-				return m_parent.getCategory();
+				return m_parent.getProject();
 			} else {
 				return null;
 			}
@@ -133,14 +135,12 @@ public class WorkspaceRunner extends Suite {
 
 		@Override
 		public boolean isAnyDependencyFailed(List<String> ids) {
+			ActionJobContext root = (ActionJobContext) getRootContext();
+
 			for (String id : ids) {
-				if (m_failedBlocks.contains(id)) {
+				if (root.m_failedProjects.contains(id)) {
 					return true;
 				}
-			}
-
-			if (m_parent != null) {
-				return m_parent.isAnyDependencyFailed(ids);
 			}
 
 			return false;
@@ -148,30 +148,25 @@ public class WorkspaceRunner extends Suite {
 
 		@Override
 		public boolean isAnyDependencyUpdated(List<String> ids) {
+			ActionJobContext root = (ActionJobContext) getRootContext();
+
 			for (String id : ids) {
-				if (m_updatedBlocks.contains(id)) {
+				if (root.m_updatedProjects.contains(id)) {
 					return true;
 				}
-			}
-
-			if (m_parent != null) {
-				return m_parent.isAnyDependencyUpdated(ids);
 			}
 
 			return false;
 		}
 
 		@Override
-		public void markAsError(String id) {
+		public void markAsError() {
 			m_error = true;
 
-			if (m_parent != null) {
-				m_parent.markAsError(id);
-			}
+			ActionJobContext root = (ActionJobContext) getRootContext();
+			String project = getProject();
 
-			if (id != null) {
-				m_failedBlocks.add(id);
-			}
+			root.m_failedProjects.add(project);
 		}
 
 		@Override
@@ -185,23 +180,29 @@ public class WorkspaceRunner extends Suite {
 		}
 
 		@Override
-		public void markAsUpdated(String id) {
-			if (id != null) {
-				if (m_parent != null) {
-					m_parent.markAsError(id);
-				} else {
-					m_updatedBlocks.add(id);
-					
-					System.out.println("updated: "+m_updatedBlocks);
-				}
+		public void markAsUpdated() {
+			ActionJobContext root = (ActionJobContext) getRootContext();
+			String project = getProject();
+
+			root.m_updatedProjects.add(project);
+		}
+
+		private ActionContext getRootContext() {
+			ActionContext root = m_parent;
+
+			while (root.getParent() != null) {
+				root = root.getParent();
 			}
+
+			return root;
 		}
 
 		@Override
 		public void print(String line) {
 			String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
-			String message = String.format("[%s] [%s] %s", timestamp, getCategory(), line);
+			String message = String.format("[%s] [%s] %s", timestamp, getProject(), line);
 
+			m_out.append(line).append("\r\n");
 			System.out.println(message);
 		}
 
@@ -209,8 +210,8 @@ public class WorkspaceRunner extends Suite {
 			m_baseDir = baseDir;
 		}
 
-		public void setCategory(String category) {
-			m_category = category;
+		public void setProject(String project) {
+			m_project = project;
 		}
 
 		@Override
@@ -221,6 +222,11 @@ public class WorkspaceRunner extends Suite {
 		@Override
 		public boolean shouldSkipped() {
 			return m_skipped || m_error || m_parent != null && m_parent.shouldSkipped();
+		}
+
+		@Override
+		public String toString() {
+			return m_out.toString();
 		}
 	}
 
@@ -246,7 +252,7 @@ public class WorkspaceRunner extends Suite {
 
 		@Override
 		public Description getDescription() {
-			return Description.createTestDescription(m_ctx.getCategory(), m_block.getName());
+			return Description.createTestDescription(m_ctx.getProject(), m_block.getName());
 		}
 
 		@Override
@@ -270,8 +276,10 @@ public class WorkspaceRunner extends Suite {
 
 				notifier.fireTestRunFinished(new Result());
 			} catch (Throwable e) {
-				m_ctx.getParent().markAsError(m_block.getId());
-				notifier.fireTestFailure(new Failure(getDescription(), e));
+				RuntimeException error = new RuntimeException(e.getMessage() + "\r\n" + m_ctx);
+
+				m_ctx.getParent().markAsError();
+				notifier.fireTestFailure(new Failure(getDescription(), error));
 			} finally {
 				notifier.fireTestFinished(getDescription());
 			}
@@ -335,19 +343,20 @@ public class WorkspaceRunner extends Suite {
 
 		@Override
 		public void run(RunNotifier notifier) {
-			if (m_ctx.isAnyDependencyFailed(m_block.getDependOns())) {
+			if (m_ctx.isAnyDependencyFailed(m_block.getProjectDependOns())) {
 				Failure failure = new Failure(getDescription(), new AssumptionViolatedException("SKIPPED"));
 
 				notifier.fireTestAssumptionFailed(failure);
-			} else if (m_ctx.isAnyDependencyUpdated(m_block.getDependOns())) {
-				// forced
+			} else if (m_ctx.isAnyDependencyUpdated(m_block.getProjectDependOns())) {
+				// force to rebuild it due to dependencies updated
+				m_ctx.markAsUpdated();
 				super.run(notifier);
 			} else if (m_jobsBefore.size() + m_jobsAfter.size() > 0) {
 				for (ActionJob job : m_jobsBefore) {
 					try {
 						job.run(m_ctx);
 					} catch (Exception e) {
-						m_ctx.markAsError(m_block.getId());
+						m_ctx.markAsError();
 
 						notifier.fireTestAssumptionFailed(new Failure(getDescription(), e));
 					}
@@ -359,7 +368,7 @@ public class WorkspaceRunner extends Suite {
 					try {
 						job.run(m_ctx);
 					} catch (Exception e) {
-						m_ctx.markAsError(m_block.getId());
+						m_ctx.markAsError();
 
 						notifier.fireTestAssumptionFailed(new Failure(getDescription(), e));
 					}
@@ -440,7 +449,6 @@ public class WorkspaceRunner extends Suite {
 			File baseDir = new File(m_baseDir, name);
 
 			repo.setId(name);
-			repo.setDynamicAttribute("category", name);
 			repo.setDynamicAttribute("baseDir", baseDir.getPath());
 
 			for (Project p : project.getDependOn()) {
@@ -450,14 +458,14 @@ public class WorkspaceRunner extends Suite {
 			// git clone
 			{
 				if (baseDir.exists()) {
-					Block step = repo.findOrCreateBlock("update the git repository");
+					Block step = repo.getChildBlock("update the git repository");
 					Instrument inst = step.newCommand().withProperties("git", "pull");
 
 					if (project.getGitPullArgs() != null) {
 						inst.addProperty(project.getGitPullArgs());
 					}
 				} else {
-					Block step = repo.findOrCreateBlock("clone the git repository");
+					Block step = repo.getChildBlock("clone the git repository");
 					String gitUrl = project.getGitUrl();
 					Instrument inst = step.newCommand().withProperties("git", "clone", "--depth", "1", gitUrl, name);
 
@@ -472,14 +480,14 @@ public class WorkspaceRunner extends Suite {
 
 			// code and test
 			{
-				Block codeAndTest = repo.findOrCreateBlock("make code and run tests");
+				Block codeAndTest = repo.getChildBlock("make code and run tests");
 
 				codeAndTest.newAction("checkUpdate").setOrder("before").addProperty("start");
 				codeAndTest.newAction("checkUpdate").setOrder("after").addProperty("end");
 
 				// jdk version
 				{
-					Block step = codeAndTest.findOrCreateBlock("set JDK version to " + project.getJdkVersion());
+					Block step = codeAndTest.getChildBlock("set JDK version to " + project.getJdkVersion());
 
 					step.newCommand().withProperties("jenv", "local", project.getJdkVersion());
 					step.newCommand().withProperties("jenv", "version-name");
@@ -487,7 +495,7 @@ public class WorkspaceRunner extends Suite {
 
 				// mvn install
 				{
-					Block step = codeAndTest.findOrCreateBlock("clean install the artifacts");
+					Block step = codeAndTest.getChildBlock("clean install the artifacts");
 					Instrument inst = step.newCommand().withProperties("mvn", "clean", "install", "-Dmaven.test.skip");
 
 					if (project.getMvnInstallArgs() != null) {
@@ -497,7 +505,7 @@ public class WorkspaceRunner extends Suite {
 
 				// mvn test
 				{
-					Block step = codeAndTest.findOrCreateBlock("run the unit tests");
+					Block step = codeAndTest.getChildBlock("run the unit tests");
 
 					Instrument inst = step.newCommand().withProperties("mvn", "test");
 
@@ -589,11 +597,11 @@ public class WorkspaceRunner extends Suite {
 	private ActionContext buildContext(ActionContext parent, Block block) {
 		ActionJobContext ctx = new ActionJobContext(parent);
 
-		String category = block.getDynamicAttribute("category");
+		String project = block.getId();
 		String baseDir = block.getDynamicAttribute("baseDir");
 
-		if (category != null) {
-			ctx.setCategory(category);
+		if (project != null) {
+			ctx.setProject(project);
 		}
 
 		if (baseDir != null) {
@@ -606,12 +614,7 @@ public class WorkspaceRunner extends Suite {
 	@Override
 	protected List<Runner> getChildren() {
 		List<Runner> children = new ArrayList<Runner>();
-		ActionJobContext parent = new ActionJobContext(null) {
-			@Override
-			public ActionContext getParent() {
-				return this;
-			}
-		};
+		ActionJobContext parent = new ActionJobContext(null);
 
 		for (Block block : m_program.getBlocks()) {
 			ActionContext ctx = buildContext(parent, block);

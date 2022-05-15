@@ -20,88 +20,93 @@ import org.unidal.workspace.ActionContext;
  * @author qmwu2000
  */
 public class CheckUpdate implements Action {
-   public void execute(ActionContext ctx, List<String> args) throws Exception {
-      String type = args.get(0);
-      File file = new File(ctx.getBaseDir(), "build.txt");
-      Path path = file.toPath();
-      List<String> lines = file.exists() ? Files.readAllLines(path) : Collections.emptyList();
+	public void execute(ActionContext ctx, List<String> args) throws Exception {
+		String type = args.get(0);
+		File file = new File(ctx.getBaseDir(), "build.txt");
+		Path path = file.toPath();
+		List<String> lines = file.exists() ? Files.readAllLines(path) : Collections.emptyList();
 
-      if ("start".equals(type)) {
-         String commitId = getLastCommitId(ctx);
+		if ("start".equals(type)) {
+			String commitId = getLastCommitId(ctx);
 
-         if (lines.size() == 2) {
-            String first = lines.get(0);
-            String second = lines.get(1);
+			if (lines.size() == 2) {
+				String first = lines.get(0);
+				String second = lines.get(1);
 
-            if (first.equals(commitId) && second.equals("OK")) {
-               ctx.print("No source update.");
-               ctx.markAsIgnored();
-               return;
-            }
-         }
+				if (first.equals(commitId) && second.equals("OK")) {
+					ctx.markAsIgnored();
+					return;
+				}
+			}
 
-         Files.write(path, commitId.getBytes());
-      } else if ("end".equals(type)) {
-         if (lines.size() == 1) {
-            String commitId = lines.get(0);
+			ctx.print("Source update found.");
+			ctx.markAsUpdated();
+			Files.write(path, commitId.getBytes());
+		} else if ("end".equals(type)) {
+			if (ctx.shouldSkipped()) {
+				return;
+			}
 
-            Files.write(path, (commitId + "\r\nOK").getBytes());
-         }
-      }
-   }
+			if (lines.size() == 1) {
+				String commitId = lines.get(0);
 
-   private String getLastCommitId(ActionContext ctx) throws IOException, InterruptedException {
-      String[] args = { "git", "rev-parse", "--short", "HEAD" };
-      Process process = new ProcessBuilder(args).directory(ctx.getBaseDir()).redirectErrorStream(true).start();
-      List<String> lines = waitFor(process);
+				Files.write(path, (commitId + "\r\nOK").getBytes());
+			}
+		}
+	}
 
-      if (lines.size() > 0) {
-         String first = lines.get(0);
+	private String getLastCommitId(ActionContext ctx) throws IOException, InterruptedException {
+		String[] args = { "git", "rev-parse", "--short", "HEAD" };
+		Process process = new ProcessBuilder(args).directory(ctx.getBaseDir()).redirectErrorStream(true).start();
+		List<String> lines = waitFor(process);
 
-         return first;
-      }
+		if (lines.size() > 0) {
+			String first = lines.get(0);
 
-      return null;
-   }
+			return first;
+		}
 
-   @Override
-   public String getName() {
-      return "checkUpdate";
-   }
+		return null;
+	}
 
-   private List<String> waitFor(Process process) throws IOException, InterruptedException {
-      List<String> lines = new ArrayList<>();
-      BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      boolean eof = false;
+	@Override
+	public String getName() {
+		return "checkUpdate";
+	}
 
-      while (!eof) {
-         while (!eof && in.ready()) {
-            String line = in.readLine();
+	private List<String> waitFor(Process process) throws IOException, InterruptedException {
+		List<String> lines = new ArrayList<>();
+		BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		boolean eof = false;
 
-            if (line == null) {
-               eof = true;
-               in.close();
-               break;
-            } else {
-               lines.add(line);
-            }
-         }
+		while (!eof) {
+			while (!eof && in.ready()) {
+				String line = in.readLine();
 
-         try {
-            int exitCode = process.exitValue();
+				if (line == null) {
+					eof = true;
+					in.close();
+					break;
+				} else {
+					lines.add(line);
+				}
+			}
 
-            if (exitCode != 0) {
-               throw new RuntimeException("Process exited with code " + exitCode);
-            } else {
-               break;
-            }
-         } catch (IllegalThreadStateException e) {
-            // ignore it
-         }
+			try {
+				int exitCode = process.exitValue();
 
-         TimeUnit.MILLISECONDS.sleep(500);
-      }
+				if (exitCode != 0) {
+					throw new RuntimeException("Process exited with code " + exitCode);
+				} else {
+					break;
+				}
+			} catch (IllegalThreadStateException e) {
+				// ignore it
+			}
 
-      return lines;
-   }
+			TimeUnit.MILLISECONDS.sleep(500);
+		}
+
+		return lines;
+	}
 }

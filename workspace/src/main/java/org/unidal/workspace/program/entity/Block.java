@@ -25,6 +25,8 @@ public class Block extends BaseEntity<Block> {
 
    private List<Block> m_blocks = new ArrayList<Block>();
 
+   private transient Block m_parent;
+
    private Map<String, String> m_dynamicAttributes = new LinkedHashMap<String, String>();
 
    public Block() {
@@ -130,6 +132,10 @@ public class Block extends BaseEntity<Block> {
       return m_name;
    }
 
+   public Block getParent() {
+      return m_parent;
+   }
+
    @Override
    public int hashCode() {
       int hash = 0;
@@ -196,7 +202,27 @@ public class Block extends BaseEntity<Block> {
       return this;
    }
 
+   public Block setParent(Block _parent) {
+      m_parent = _parent;
+      return this;
+   }
+
    /********* Code Snippet Start *********/
+   public Block getChildBlock(String name) {
+      Block child = findOrCreateBlock(name);
+
+      child.setParent(this);
+      return child;
+   }
+
+   public List<String> getProjectDependOns() {
+      if (m_id != null) {
+         return m_dependOns;
+      } else {
+         return m_parent.getDependOns();
+      }
+   }
+
    public Instrument newAction(String type) {
       Instrument instrument = new Instrument().setType(type);
 
