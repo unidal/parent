@@ -11,11 +11,18 @@
     <element name="depend-on" value-type="String" type="list" names="depend-ons" />
     <entity-ref name="instrument" type="list" names="instruments" />
     <entity-ref name="block" type="list" names="blocks" />
+    <entity-ref name="status" />
   </entity>
   <entity name="instrument">
     <attribute name="type" value-type="String" />
     <attribute name="order" value-type="String" />
     <element name="property" value-type="String" type="list" names="properties" />
+  </entity>
+  <entity name="status">
+    <attribute name="ignored" value-type="boolean" />
+    <attribute name="skipped" value-type="boolean" />
+    <attribute name="error" value-type="boolean" />
+    <element name="message" value-type="String" />
   </entity>
 </model>
 

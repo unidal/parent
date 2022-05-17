@@ -5,6 +5,7 @@ import org.unidal.workspace.program.IVisitor;
 import org.unidal.workspace.program.entity.Block;
 import org.unidal.workspace.program.entity.Instrument;
 import org.unidal.workspace.program.entity.Program;
+import org.unidal.workspace.program.entity.Status;
 
 public abstract class BaseVisitor implements IVisitor {
    @Override
@@ -15,6 +16,10 @@ public abstract class BaseVisitor implements IVisitor {
 
       for (Block block_ : block.getBlocks()) {
          visitBlock(block_);
+      }
+
+      if (block.getStatus() != null) {
+         visitStatus(block.getStatus());
       }
    }
 
@@ -27,5 +32,9 @@ public abstract class BaseVisitor implements IVisitor {
       for (Block block_ : program.getBlocks()) {
          visitBlock(block_);
       }
+   }
+
+   @Override
+   public void visitStatus(Status status) {
    }
 }

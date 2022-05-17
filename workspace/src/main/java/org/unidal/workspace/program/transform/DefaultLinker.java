@@ -6,6 +6,7 @@ import java.util.List;
 import org.unidal.workspace.program.entity.Block;
 import org.unidal.workspace.program.entity.Instrument;
 import org.unidal.workspace.program.entity.Program;
+import org.unidal.workspace.program.entity.Status;
 
 public class DefaultLinker {
    @SuppressWarnings("unused")
@@ -35,6 +36,11 @@ public class DefaultLinker {
 
    public boolean onInstrument(final Block parent, final Instrument instrument) {
       parent.addInstrument(instrument);
+      return true;
+   }
+
+   public boolean onStatus(final Block parent, final Status status) {
+      parent.setStatus(status);
       return true;
    }
 }

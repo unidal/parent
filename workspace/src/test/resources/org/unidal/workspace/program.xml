@@ -3,7 +3,7 @@
       <instrument type="checkSshKeys">
       </instrument>
    </block>
-   <block name="repository: parent" id="parent" baseDir="/Users/qmwu2000/.joya/repos/parent">
+   <block name="repository: parent" id="parent">
       <block name="update the git repository">
          <instrument type="command">
             <property>git</property>
@@ -36,6 +36,9 @@
                <property>test</property>
                <property>-N</property>
             </instrument>
+            <status ignored="false" skipped="false" error="true">
+               <message>error message</message>
+            </status>
          </block>
          <block name="clean install the artifacts">
             <instrument type="command">

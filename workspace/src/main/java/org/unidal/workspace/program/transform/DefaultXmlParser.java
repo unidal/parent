@@ -3,12 +3,14 @@ package org.unidal.workspace.program.transform;
 
 import static org.unidal.workspace.program.Constants.ELEMENT_DEPEND_ON;
 import static org.unidal.workspace.program.Constants.ELEMENT_DEPEND_ONS;
+import static org.unidal.workspace.program.Constants.ELEMENT_MESSAGE;
 import static org.unidal.workspace.program.Constants.ELEMENT_PROPERTY;
 import static org.unidal.workspace.program.Constants.ELEMENT_PROPERTIES;
 
 import static org.unidal.workspace.program.Constants.ENTITY_BLOCK;
 import static org.unidal.workspace.program.Constants.ENTITY_INSTRUMENT;
 import static org.unidal.workspace.program.Constants.ENTITY_PROGRAM;
+import static org.unidal.workspace.program.Constants.ENTITY_STATUS;
 
 import java.io.IOException;
 import java.util.Stack;
@@ -25,6 +27,7 @@ import org.unidal.workspace.program.IEntity;
 import org.unidal.workspace.program.entity.Block;
 import org.unidal.workspace.program.entity.Instrument;
 import org.unidal.workspace.program.entity.Program;
+import org.unidal.workspace.program.entity.Status;
 
 public class DefaultXmlParser extends DefaultHandler {
 
@@ -113,6 +116,12 @@ public class DefaultXmlParser extends DefaultHandler {
             if (ELEMENT_PROPERTY.equals(currentTag)) {
                instrument.addProperty(getText());
             }
+         } else if (currentObj instanceof Status) {
+            Status status = (Status) currentObj;
+
+            if (ELEMENT_MESSAGE.equals(currentTag)) {
+               status.setMessage(getText());
+            }
          }
       }
 
@@ -136,6 +145,11 @@ public class DefaultXmlParser extends DefaultHandler {
 
          m_linker.onBlock(parentObj, block_);
          m_objs.push(block_);
+      } else if (ENTITY_STATUS.equals(qName)) {
+         Status status = m_maker.buildStatus(attributes);
+
+         m_linker.onStatus(parentObj, status);
+         m_objs.push(status);
       } else {
          throw new SAXException(String.format("Element(%s) is not expected under block!", qName));
       }
@@ -166,6 +180,16 @@ public class DefaultXmlParser extends DefaultHandler {
       m_tags.push(qName);
    }
 
+   private void parseForStatus(Status parentObj, String parentTag, String qName, Attributes attributes) throws SAXException {
+      if (ELEMENT_MESSAGE.equals(qName)) {
+         m_objs.push(parentObj);
+      } else {
+         throw new SAXException(String.format("Element(%s) is not expected under status!", qName));
+      }
+
+      m_tags.push(qName);
+   }
+
    private void parseRoot(String qName, Attributes attributes) throws SAXException {
       if (ENTITY_PROGRAM.equals(qName)) {
          Program program = m_maker.buildProgram(attributes);
@@ -184,6 +208,12 @@ public class DefaultXmlParser extends DefaultHandler {
 
          m_root = instrument;
          m_objs.push(instrument);
+         m_tags.push(qName);
+      } else if (ENTITY_STATUS.equals(qName)) {
+         Status status = m_maker.buildStatus(attributes);
+
+         m_root = status;
+         m_objs.push(status);
          m_tags.push(qName);
       } else {
          throw new SAXException("Unknown root element(" + qName + ") found!");
@@ -205,6 +235,8 @@ public class DefaultXmlParser extends DefaultHandler {
                parseForBlock((Block) parent, tag, qName, attributes);
             } else if (parent instanceof Instrument) {
                parseForInstrument((Instrument) parent, tag, qName, attributes);
+            } else if (parent instanceof Status) {
+               parseForStatus((Status) parent, tag, qName, attributes);
             } else {
                throw new RuntimeException(String.format("Unknown entity(%s) under %s!", qName, parent.getClass().getName()));
             }

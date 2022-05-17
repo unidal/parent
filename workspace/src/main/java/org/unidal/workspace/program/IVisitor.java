@@ -4,6 +4,7 @@ package org.unidal.workspace.program;
 import org.unidal.workspace.program.entity.Block;
 import org.unidal.workspace.program.entity.Instrument;
 import org.unidal.workspace.program.entity.Program;
+import org.unidal.workspace.program.entity.Status;
 
 public interface IVisitor {
 
@@ -12,4 +13,6 @@ public interface IVisitor {
    public void visitInstrument(Instrument instrument);
 
    public void visitProgram(Program program);
+
+   public void visitStatus(Status status);
 }

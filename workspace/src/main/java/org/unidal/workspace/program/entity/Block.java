@@ -25,6 +25,8 @@ public class Block extends BaseEntity<Block> {
 
    private List<Block> m_blocks = new ArrayList<Block>();
 
+   private Status m_status;
+
    private transient Block m_parent;
 
    private Map<String, String> m_dynamicAttributes = new LinkedHashMap<String, String>();
@@ -136,6 +138,10 @@ public class Block extends BaseEntity<Block> {
       return m_parent;
    }
 
+   public Status getStatus() {
+      return m_status;
+   }
+
    @Override
    public int hashCode() {
       int hash = 0;
@@ -204,6 +210,11 @@ public class Block extends BaseEntity<Block> {
 
    public Block setParent(Block _parent) {
       m_parent = _parent;
+      return this;
+   }
+
+   public Block setStatus(Status status) {
+      m_status = status;
       return this;
    }
 
