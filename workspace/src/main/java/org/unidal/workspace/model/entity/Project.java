@@ -13,6 +13,8 @@ import org.unidal.workspace.model.IVisitor;
 public class Project extends BaseEntity<Project> {
    private String m_name;
 
+   private String m_type;
+
    private Boolean m_enabled = true;
 
    private String m_gitUrl;
@@ -24,6 +26,10 @@ public class Project extends BaseEntity<Project> {
    private String m_mvnInstallArgs;
 
    private String m_mvnTestArgs;
+
+   private String m_dockerBuildArgs;
+
+   private String m_kubectlApplyArgs;
 
    private String m_jdkVersion;
 
@@ -89,6 +95,10 @@ public class Project extends BaseEntity<Project> {
       return m_dependOn;
    }
 
+   public String getDockerBuildArgs() {
+      return m_dockerBuildArgs;
+   }
+
    public Boolean getEnabled() {
       return m_enabled;
    }
@@ -113,6 +123,10 @@ public class Project extends BaseEntity<Project> {
       return m_jdkVersion;
    }
 
+   public String getKubectlApplyArgs() {
+      return m_kubectlApplyArgs;
+   }
+
    public String getMvnInstallArgs() {
       return m_mvnInstallArgs;
    }
@@ -131,6 +145,10 @@ public class Project extends BaseEntity<Project> {
 
    public String getText() {
       return m_text;
+   }
+
+   public String getType() {
+      return m_type;
    }
 
    @Override
@@ -153,6 +171,10 @@ public class Project extends BaseEntity<Project> {
    @Override
    public void mergeAttributes(Project other) {
       assertAttributeEquals(other, ENTITY_PROJECT, ATTR_NAME, m_name, other.getName());
+
+      if (other.getType() != null) {
+         m_type = other.getType();
+      }
 
       if (other.getEnabled() != null) {
          m_enabled = other.getEnabled();
@@ -177,6 +199,11 @@ public class Project extends BaseEntity<Project> {
 
    public Project setBaseDir(java.io.File baseDir) {
       m_baseDir = baseDir;
+      return this;
+   }
+
+   public Project setDockerBuildArgs(String dockerBuildArgs) {
+      m_dockerBuildArgs = dockerBuildArgs;
       return this;
    }
 
@@ -210,6 +237,11 @@ public class Project extends BaseEntity<Project> {
       return this;
    }
 
+   public Project setKubectlApplyArgs(String kubectlApplyArgs) {
+      m_kubectlApplyArgs = kubectlApplyArgs;
+      return this;
+   }
+
    public Project setMvnInstallArgs(String mvnInstallArgs) {
       m_mvnInstallArgs = mvnInstallArgs;
       return this;
@@ -232,6 +264,11 @@ public class Project extends BaseEntity<Project> {
 
    public Project setText(String text) {
       m_text = text;
+      return this;
+   }
+
+   public Project setType(String type) {
+      m_type = type;
       return this;
    }
 

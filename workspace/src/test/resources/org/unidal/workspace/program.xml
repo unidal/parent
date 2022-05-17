@@ -1,13 +1,10 @@
 <program>
-   <block name="check SSH keys" ignored="true">
+   <block name="check SSH keys" ignored="false">
       <instrument type="checkSshKeys">
       </instrument>
    </block>
-   <block name="repository: parent" id="parent">
-      <block name="clone the git repository">
-         <instrument type="message">
-            <property>Git repository(parent) exists.</property>
-         </instrument>
+   <block name="repository: parent" id="parent" baseDir="/Users/qmwu2000/.joya/repos/parent">
+      <block name="update the git repository">
          <instrument type="command">
             <property>git</property>
             <property>clone</property>
@@ -33,6 +30,13 @@
                <property>version-name</property>
             </instrument>
          </block>
+         <block name="run the unit tests">
+            <instrument type="command">
+               <property>mvn</property>
+               <property>test</property>
+               <property>-N</property>
+            </instrument>
+         </block>
          <block name="clean install the artifacts">
             <instrument type="command">
                <property>mvn</property>
@@ -40,12 +44,6 @@
                <property>install</property>
                <property>-Dmaven.test.skip</property>
                <property>-N</property>
-            </instrument>
-         </block>
-         <block name="run the unit tests">
-            <instrument type="command">
-               <property>mvn</property>
-               <property>test</property>
             </instrument>
          </block>
       </block>

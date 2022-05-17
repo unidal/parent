@@ -4,10 +4,13 @@ package org.unidal.workspace.model.transform;
 import static org.unidal.workspace.model.Constants.ATTR_ENABLED;
 import static org.unidal.workspace.model.Constants.ATTR_FOR;
 import static org.unidal.workspace.model.Constants.ATTR_NAME;
+import static org.unidal.workspace.model.Constants.ATTR_TYPE;
+import static org.unidal.workspace.model.Constants.ELEMENT_DOCKER_BUILD_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_GIT_CLONE_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_GIT_PULL_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_GIT_URL;
 import static org.unidal.workspace.model.Constants.ELEMENT_JDK_VERSION;
+import static org.unidal.workspace.model.Constants.ELEMENT_KUBECTL_APPLY_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_MVN_INSTALL_ARGS;
 import static org.unidal.workspace.model.Constants.ELEMENT_MVN_TEST_ARGS;
 import static org.unidal.workspace.model.Constants.ENTITY_DEPEND_ON;
@@ -264,7 +267,7 @@ public class DefaultXmlBuilder implements IVisitor {
 
    @Override
    public void visitProject(Project project) {
-      startTag(ENTITY_PROJECT, null, ATTR_NAME, project.getName(), ATTR_ENABLED, project.getEnabled());
+      startTag(ENTITY_PROJECT, null, ATTR_NAME, project.getName(), ATTR_TYPE, project.getType(), ATTR_ENABLED, project.getEnabled());
 
       if (project.getText() != null) {
          m_sb.append(project.getText());
@@ -279,6 +282,10 @@ public class DefaultXmlBuilder implements IVisitor {
       element(ELEMENT_MVN_INSTALL_ARGS, project.getMvnInstallArgs(), null,  true);
 
       element(ELEMENT_MVN_TEST_ARGS, project.getMvnTestArgs(), null,  true);
+
+      element(ELEMENT_DOCKER_BUILD_ARGS, project.getDockerBuildArgs(), null,  true);
+
+      element(ELEMENT_KUBECTL_APPLY_ARGS, project.getKubectlApplyArgs(), null,  true);
 
       element(ELEMENT_JDK_VERSION, project.getJdkVersion(), null,  true);
 

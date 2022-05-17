@@ -47,7 +47,7 @@
       </depend-on>
       <jdk-version>17</jdk-version>
    </project>
-   <project name="uml">
+   <project name="uml" type="war">
       <git-url>git@gitee.com:qmwu2000/uml.git</git-url>
       <depend-on>
          <project>frameworks</project>
@@ -58,6 +58,7 @@
    </project>
    <project name="tulip">
       <git-url>git@gitee.com:unidal/tulip.git</git-url>
+      <mvn-test-args>-Dmaven.test.skip</mvn-test-args>
       <depend-on>
          <project>frameworks</project>
          <project>maven-plugins</project>

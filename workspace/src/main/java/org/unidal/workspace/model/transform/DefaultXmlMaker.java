@@ -4,6 +4,7 @@ package org.unidal.workspace.model.transform;
 import static org.unidal.workspace.model.Constants.ATTR_ENABLED;
 import static org.unidal.workspace.model.Constants.ATTR_FOR;
 import static org.unidal.workspace.model.Constants.ATTR_NAME;
+import static org.unidal.workspace.model.Constants.ATTR_TYPE;
 
 import org.xml.sax.Attributes;
 
@@ -14,8 +15,13 @@ public class DefaultXmlMaker {
 
    public Project buildProject(Attributes attributes) {
       String name = attributes.getValue(ATTR_NAME);
+      String type = attributes.getValue(ATTR_TYPE);
       String enabled = attributes.getValue(ATTR_ENABLED);
       Project project = new Project(name);
+
+      if (type != null) {
+         project.setType(type);
+      }
 
       if (enabled != null) {
          project.setEnabled(convert(Boolean.class, enabled, null));
