@@ -8,6 +8,7 @@ import static org.unidal.workspace.program.Constants.ATTR_NAME;
 import static org.unidal.workspace.program.Constants.ATTR_ORDER;
 import static org.unidal.workspace.program.Constants.ATTR_SKIPPED;
 import static org.unidal.workspace.program.Constants.ATTR_TYPE;
+import static org.unidal.workspace.program.Constants.ATTR_UPDATED;
 import static org.unidal.workspace.program.Constants.ELEMENT_DEPEND_ON;
 import static org.unidal.workspace.program.Constants.ELEMENT_MESSAGE;
 import static org.unidal.workspace.program.Constants.ELEMENT_PROPERTY;
@@ -323,7 +324,7 @@ public class DefaultXmlBuilder implements IVisitor {
 
    @Override
    public void visitStatus(Status status) {
-      startTag(ENTITY_STATUS, null, ATTR_IGNORED, status.getIgnored(), ATTR_SKIPPED, status.getSkipped(), ATTR_ERROR, status.getError());
+      startTag(ENTITY_STATUS, null, ATTR_IGNORED, status.getIgnored(), ATTR_SKIPPED, status.getSkipped(), ATTR_ERROR, status.getError(), ATTR_UPDATED, status.getUpdated());
 
       element(ELEMENT_MESSAGE, status.getMessage(), null,  true);
 

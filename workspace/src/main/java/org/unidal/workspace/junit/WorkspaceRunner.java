@@ -2,29 +2,26 @@ package org.unidal.workspace.junit;
 
 import java.io.File;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.runner.Description;
-import org.junit.runner.Result;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
+import org.junit.runner.notification.StoppedByUserException;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.TestClass;
 import org.unidal.workspace.Action;
-import org.unidal.workspace.ActionContext;
+import org.unidal.workspace.BlockContext;
+import org.unidal.workspace.BlockContextSupport;
 import org.unidal.workspace.action.CheckSshKeys;
 import org.unidal.workspace.action.CheckUpdate;
 import org.unidal.workspace.action.CommandAction;
@@ -43,12 +40,16 @@ import org.unidal.workspace.program.entity.Program;
  * 
  * Following environments setup is required before the runner:
  * <p>
- * <li>JDK: Oracle JDK or Open JDK</li>
+ * <li>JDK: short of Java Development Kit, such as Oracle <a href="https://www.oracle.com/java/technologies/downloads">JDK</a> or
+ * Oracle <a href="http://jdk.java.net/">OpenJDK</a></li>
  * <li>jenv: <a href="https://www.jenv.be/">jEnv</a> is a command line tool to help you forget how to set the JAVA_HOME environment
  * variable</li>
  * <li>git: <a href="https://git-scm.com/">Git</a> is a free and open source distributed version control system</li>
  * <li>maven: <a href="http://maven.apache.org">Apache Maven</a> is a software project management and comprehension tool</li>
- *
+ * <li>docker: <a href="https://www.docker.com">Docker</a> is an open-source software project automating the deployment of
+ * applications inside software containers. For Max OSX or Windows, docker desktop is suggested.</li>
+ * <li>kubernetes: <a href="https://kubernetes.io">Kubernetes</a> is an open source container orchestration engine for automating
+ * deployment, scaling, and management of containerized applications</li>
  * 
  * <p>
  * Usage:
@@ -63,6 +64,67 @@ import org.unidal.workspace.program.entity.Program;
  * @author qmwu2000
  */
 public class WorkspaceRunner extends Suite {
+	private static final String TARGET_DIRECTORY = "/Users/qmwu2000/.joya/repos";
+
+	private static final String DEFAULT_JDK_VERSION = "1.7";
+
+	private Program m_program = new Program();
+
+	private File m_baseDir;
+
+	private Map<String, Action> m_actions = new HashMap<>();
+
+	public WorkspaceRunner(Class<?> klass) throws Exception {
+		super(klass, Collections.<Runner> emptyList());
+
+		m_baseDir = new File(TARGET_DIRECTORY);
+
+		if (!m_baseDir.exists()) {
+			m_baseDir.mkdirs();
+		}
+
+		InputStream in = getClass().getResourceAsStream("../workspace.xml");
+		Workspace workspace = WorkspaceHelper.fromXml(in);
+
+		workspace.accept(new WorkspaceInitializer());
+		workspace.accept(new ProgramBuilder());
+
+		register(new CommandAction());
+		register(new MessageAction());
+		register(new CheckSshKeys());
+		register(new CheckUpdate());
+	}
+
+	@Override
+	protected List<Runner> getChildren() {
+		List<Runner> children = new ArrayList<Runner>();
+
+		for (Block block : m_program.getBlocks()) {
+			if (block.getBlocks().isEmpty()) {
+				children.add(new LeafRunner(new BlockContextSupport(block)));
+			} else {
+				try {
+					children.add(new NodeRunner(new BlockContextSupport(block)));
+				} catch (InitializationError e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return children;
+	}
+
+	private void register(Action action) {
+		m_actions.put(action.getName(), action);
+	}
+
+	@Override
+	public void run(RunNotifier notifier) {
+		super.run(notifier);
+
+		System.out.println(m_program);
+	}
+
 	private class ActionJob {
 		private Action m_action;
 
@@ -73,171 +135,27 @@ public class WorkspaceRunner extends Suite {
 			m_args = args;
 
 			if (m_action == null) {
-				throw new RuntimeException(String.format("Instrument type(%s) is NOT supported yet! " + //
-				      "Write custom action please!", name));
+				throw new RuntimeException(String.format("Instrument type(%s) is NOT defined! " + //
+				      "Use custom action please!", name));
 			}
 		}
 
-		public void run(ActionContext ctx) throws Exception {
+		public void run(BlockContext ctx) throws Exception {
 			m_action.execute(ctx, m_args);
 		}
 	}
 
-	private static class ActionJobContext implements ActionContext {
-		private ActionContext m_parent;
-
-		private String m_project;
-
-		private File m_baseDir;
-
-		private boolean m_error;
-
-		private boolean m_skipped;
-
-		private boolean m_ignored;
-
-		private Set<String> m_failedProjects = new HashSet<>();
-
-		private Set<String> m_updatedProjects = new HashSet<>();
-
-		private StringBuilder m_out = new StringBuilder(1024);
-
-		public ActionJobContext(ActionContext parent) {
-			m_parent = parent;
-		}
-
-		@Override
-		public File getBaseDir() {
-			if (m_baseDir != null) {
-				return m_baseDir;
-			} else if (m_parent != null) {
-				return m_parent.getBaseDir();
-			} else {
-				return null;
-			}
-		}
-
-		@Override
-		public String getProject() {
-			if (m_project != null) {
-				return m_project;
-			} else if (m_parent != null) {
-				return m_parent.getProject();
-			} else {
-				return null;
-			}
-		}
-
-		@Override
-		public ActionContext getParent() {
-			return m_parent;
-		}
-
-		@Override
-		public boolean isAnyDependencyFailed(List<String> ids) {
-			ActionJobContext root = (ActionJobContext) getRootContext();
-
-			for (String id : ids) {
-				if (root.m_failedProjects.contains(id)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		@Override
-		public boolean isAnyDependencyUpdated(List<String> ids) {
-			ActionJobContext root = (ActionJobContext) getRootContext();
-
-			for (String id : ids) {
-				if (root.m_updatedProjects.contains(id)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		@Override
-		public void markAsError() {
-			m_error = true;
-
-			ActionJobContext root = (ActionJobContext) getRootContext();
-			String project = getProject();
-
-			root.m_failedProjects.add(project);
-		}
-
-		@Override
-		public void markAsIgnored() {
-			m_ignored = true;
-		}
-
-		@Override
-		public void markAsSkipped() {
-			m_skipped = true;
-		}
-
-		@Override
-		public void markAsUpdated() {
-			ActionJobContext root = (ActionJobContext) getRootContext();
-			String project = getProject();
-
-			root.m_updatedProjects.add(project);
-		}
-
-		private ActionContext getRootContext() {
-			ActionContext root = m_parent;
-
-			while (root.getParent() != null) {
-				root = root.getParent();
-			}
-
-			return root;
-		}
-
-		@Override
-		public void print(String line) {
-			String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
-			String message = String.format("[%s] [%s] %s", timestamp, getProject(), line);
-
-			m_out.append(line).append("\r\n");
-			System.out.println(message);
-		}
-
-		public void setBaseDir(File baseDir) {
-			m_baseDir = baseDir;
-		}
-
-		public void setProject(String project) {
-			m_project = project;
-		}
-
-		@Override
-		public boolean shouldIgnored() {
-			return m_ignored;
-		}
-
-		@Override
-		public boolean shouldSkipped() {
-			return m_skipped || m_error || m_parent != null && m_parent.shouldSkipped();
-		}
-
-		@Override
-		public String toString() {
-			return m_out.toString();
-		}
-	}
-
 	private class LeafRunner extends Runner {
+		private BlockContext m_ctx;
+
 		private Block m_block;
 
-		private ActionContext m_ctx;
+		private Description m_description;
 
-		public LeafRunner(ActionContext ctx, Block block) {
-			m_block = block;
+		public LeafRunner(BlockContext ctx) {
 			m_ctx = ctx;
+			m_block = ctx.getBlock();
+			m_description = Description.createTestDescription(m_ctx.getProject(), m_block.getName());
 		}
 
 		private List<ActionJob> buildJobs() {
@@ -252,42 +170,42 @@ public class WorkspaceRunner extends Suite {
 
 		@Override
 		public Description getDescription() {
-			return Description.createTestDescription(m_ctx.getProject(), m_block.getName());
+			return m_description;
 		}
 
 		@Override
 		public void run(RunNotifier notifier) {
 			List<ActionJob> jobs = buildJobs();
 
-			notifier.fireTestStarted(getDescription());
+			notifier.fireTestStarted(m_description);
 
 			try {
-				if (m_block.isIgnored()) {
-					notifier.fireTestIgnored(getDescription());
+				if (m_ctx.shouldIgnore()) {
+					notifier.fireTestIgnored(m_description);
+				} else if (m_ctx.shouldSkip()) {
+					Failure failure = new Failure(m_description, new AssumptionViolatedException("SKIPPED"));
+
+					notifier.fireTestAssumptionFailed(failure);
 				} else {
 					for (ActionJob job : jobs) {
 						job.run(m_ctx);
-
-						if (m_ctx.shouldIgnored()) {
-							notifier.fireTestIgnored(getDescription());
-						}
 					}
 				}
-
-				notifier.fireTestRunFinished(new Result());
+			} catch (StoppedByUserException e) {
+				throw e;
 			} catch (Throwable e) {
-				RuntimeException error = new RuntimeException(e.getMessage() + "\r\n" + m_ctx);
+				RuntimeException error = new RuntimeException(e.getMessage() + "\r\n" + m_ctx.getOutput());
 
-				m_ctx.getParent().markAsError();
-				notifier.fireTestFailure(new Failure(getDescription(), error));
+				m_ctx.markAsError(e.getMessage());
+				notifier.fireTestFailure(new Failure(m_description, error));
 			} finally {
-				notifier.fireTestFinished(getDescription());
+				notifier.fireTestFinished(m_description);
 			}
 		}
 	}
 
 	private class NodeRunner extends ParentRunner<Runner> {
-		private ActionContext m_ctx;
+		private BlockContext m_ctx;
 
 		private Block m_block;
 
@@ -297,11 +215,11 @@ public class WorkspaceRunner extends Suite {
 
 		private List<Runner> m_children = new ArrayList<>();
 
-		public NodeRunner(ActionContext ctx, Block block) throws InitializationError {
+		public NodeRunner(BlockContext ctx) throws InitializationError {
 			super(new TestClass(null));
 
 			m_ctx = ctx;
-			m_block = block;
+			m_block = m_ctx.getBlock();
 
 			for (Instrument instrument : m_block.getInstruments()) {
 				String order = instrument.getOrder();
@@ -316,12 +234,10 @@ public class WorkspaceRunner extends Suite {
 			}
 
 			for (Block child : m_block.getBlocks()) {
-				ActionContext cctx = buildContext(ctx, child);
-
 				if (child.getBlocks().isEmpty()) {
-					m_children.add(new LeafRunner(cctx, child));
+					m_children.add(new LeafRunner(new BlockContextSupport(child)));
 				} else {
-					m_children.add(new NodeRunner(cctx, child));
+					m_children.add(new NodeRunner(new BlockContextSupport(child)));
 				}
 			}
 		}
@@ -338,27 +254,29 @@ public class WorkspaceRunner extends Suite {
 
 		@Override
 		protected String getName() {
-			return m_block.getName();
+			return String.format("%s(%s)", m_ctx.getProject(), m_block.getName());
 		}
 
 		@Override
 		public void run(RunNotifier notifier) {
-			if (m_ctx.isAnyDependencyFailed(m_block.getProjectDependOns())) {
-				Failure failure = new Failure(getDescription(), new AssumptionViolatedException("SKIPPED"));
+			Description description = getDescription();
+
+			if (m_ctx.shouldIgnore()) {
+				super.run(notifier);
+				notifier.fireTestIgnored(description);
+			} else if (m_ctx.shouldSkip()) {
+				Failure failure = new Failure(description, new AssumptionViolatedException("SKIPPED"));
 
 				notifier.fireTestAssumptionFailed(failure);
-			} else if (m_ctx.isAnyDependencyUpdated(m_block.getProjectDependOns())) {
-				// force to rebuild it due to dependencies updated
-				m_ctx.markAsUpdated();
 				super.run(notifier);
 			} else if (m_jobsBefore.size() + m_jobsAfter.size() > 0) {
 				for (ActionJob job : m_jobsBefore) {
 					try {
 						job.run(m_ctx);
 					} catch (Exception e) {
-						m_ctx.markAsError();
+						m_ctx.markAsError(e.getMessage());
 
-						notifier.fireTestAssumptionFailed(new Failure(getDescription(), e));
+						notifier.fireTestFailure(new Failure(description, e));
 					}
 				}
 
@@ -368,9 +286,9 @@ public class WorkspaceRunner extends Suite {
 					try {
 						job.run(m_ctx);
 					} catch (Exception e) {
-						m_ctx.markAsError();
+						m_ctx.markAsError(e.getMessage());
 
-						notifier.fireTestAssumptionFailed(new Failure(getDescription(), e));
+						notifier.fireTestFailure(new Failure(description, e));
 					}
 				}
 			} else {
@@ -380,25 +298,11 @@ public class WorkspaceRunner extends Suite {
 
 		@Override
 		protected void runChild(Runner child, RunNotifier notifier) {
-			if (m_ctx.shouldIgnored()) {
-				notifier.fireTestIgnored(child.getDescription());
-			} else if (m_ctx.shouldSkipped()) {
-				Failure failure = new Failure(child.getDescription(), new AssumptionViolatedException("SKIPPED"));
-
-				notifier.fireTestAssumptionFailed(failure);
-			} else {
-				child.run(notifier);
-			}
+			child.run(notifier);
 		}
 	}
 
 	private class ProgramBuilder extends BaseVisitor {
-		private Program m_program;
-
-		public ProgramBuilder(Program program) {
-			m_program = program;
-		}
-
 		private List<Project> getSortedProjects(Workspace workspace) {
 			for (Project project : workspace.getProjects().values()) {
 				setOrder(project, workspace);
@@ -446,18 +350,22 @@ public class WorkspaceRunner extends Suite {
 		public void visitProject(Project project) {
 			String name = project.getName();
 			Block repo = m_program.findOrCreateBlock("repository: " + name);
-			File baseDir = new File(m_baseDir, name);
+			File projectBaseDir = new File(m_baseDir, name);
 
 			repo.setId(name);
-			repo.setDynamicAttribute("baseDir", baseDir.getPath());
+			repo.setDynamicAttribute("baseDir", projectBaseDir.getPath());
 
 			for (Project p : project.getDependOn()) {
-				repo.addDependOn(p.getName());
+				String id = p.getName();
+				Block ref = m_program.findBlockById(id);
+
+				repo.addDependOn(id);
+				repo.addDependOnRef(ref);
 			}
 
-			// git clone
+			// git clone or pull
 			{
-				if (baseDir.exists()) {
+				if (projectBaseDir.exists()) {
 					Block step = repo.getChildBlock("update the git repository");
 					Instrument inst = step.newCommand().withProperties("git", "pull");
 
@@ -470,7 +378,7 @@ public class WorkspaceRunner extends Suite {
 					Instrument inst = step.newCommand().withProperties("git", "clone", "--depth", "1", gitUrl, name);
 
 					// override baseDir
-					step.setDynamicAttribute("baseDir", m_baseDir.getPath());
+					step.setDynamicAttribute("baseDir", projectBaseDir.getParent());
 
 					if (project.getGitCloneArgs() != null) {
 						inst.addProperty(project.getGitCloneArgs());
@@ -478,7 +386,7 @@ public class WorkspaceRunner extends Suite {
 				}
 			}
 
-			// code and test
+			// code compile and test and install
 			{
 				Block codeAndTest = repo.getChildBlock("make code and run tests");
 
@@ -493,6 +401,16 @@ public class WorkspaceRunner extends Suite {
 					step.newCommand().withProperties("jenv", "version-name");
 				}
 
+				// mvn test
+				{
+					Block step = codeAndTest.getChildBlock("run the unit tests");
+					Instrument inst = step.newCommand().withProperties("mvn", "test");
+
+					if (project.getMvnTestArgs() != null) {
+						inst.addProperty(project.getMvnTestArgs());
+					}
+				}
+
 				// mvn install
 				{
 					Block step = codeAndTest.getChildBlock("clean install the artifacts");
@@ -503,14 +421,23 @@ public class WorkspaceRunner extends Suite {
 					}
 				}
 
-				// mvn test
-				{
-					Block step = codeAndTest.getChildBlock("run the unit tests");
+				// build docker image
+				if ("war".equals(project.getType())) {
+					Block step = codeAndTest.getChildBlock("build docker image");
+					Instrument inst = step.newCommand().withProperties("docker", "build", "-t", project.getName(), ".");
 
-					Instrument inst = step.newCommand().withProperties("mvn", "test");
+					if (project.getDockerBuildArgs() != null) {
+						inst.addProperty(project.getDockerBuildArgs());
+					}
+				}
 
-					if (project.getMvnTestArgs() != null) {
-						inst.addProperty(project.getMvnTestArgs());
+				// deploy to kubernetes
+				if ("war".equals(project.getType())) {
+					Block step = codeAndTest.getChildBlock("deploy to kubernetes");
+					Instrument inst = step.newCommand().withProperties("kubectl", "apply", "-f", "deploy.yaml");
+
+					if (project.getKubectlApplyArgs() != null) {
+						inst.addProperty(project.getKubectlApplyArgs());
 					}
 				}
 			}
@@ -544,11 +471,18 @@ public class WorkspaceRunner extends Suite {
 
 			List<Project> links = new ArrayList<>();
 
-			for (Project dependency : project.getDependOn()) {
-				Project link = m_workspace.findProject(dependency.getText());
+			for (Project dependon : project.getDependOn()) {
+				String name = dependon.getText();
+				Project ref = m_workspace.findProject(name);
 
-				link.setText(dependency.getText());
-				links.add(link);
+				if (ref != null) {
+					ref.setText(name);
+					links.add(ref);
+				} else {
+					String message = String.format("Depend-on(%s) of project(%s) is not defined!", name, project.getName());
+
+					throw new IllegalStateException(message);
+				}
 			}
 
 			project.getDependOn().clear();
@@ -561,79 +495,5 @@ public class WorkspaceRunner extends Suite {
 
 			super.visitWorkspace(workspace);
 		}
-	}
-
-	private static final String TARGET_DIRECTORY = "/Users/qmwu2000/project/lab";
-
-	private static final String DEFAULT_JDK_VERSION = "1.7";
-
-	private Program m_program = new Program();
-
-	private File m_baseDir;
-
-	private Map<String, Action> m_actions = new HashMap<>();
-
-	public WorkspaceRunner(Class<?> klass) throws Exception {
-		super(klass, Collections.<Runner> emptyList());
-
-		m_baseDir = new File(TARGET_DIRECTORY);
-
-		if (!m_baseDir.exists()) {
-			m_baseDir.mkdirs();
-		}
-
-		InputStream in = getClass().getResourceAsStream("../workspace.xml");
-		Workspace workspace = WorkspaceHelper.fromXml(in);
-
-		workspace.accept(new WorkspaceInitializer());
-		workspace.accept(new ProgramBuilder(m_program));
-
-		register(new CommandAction());
-		register(new MessageAction());
-		register(new CheckSshKeys());
-		register(new CheckUpdate());
-	}
-
-	private ActionContext buildContext(ActionContext parent, Block block) {
-		ActionJobContext ctx = new ActionJobContext(parent);
-
-		String project = block.getId();
-		String baseDir = block.getDynamicAttribute("baseDir");
-
-		if (project != null) {
-			ctx.setProject(project);
-		}
-
-		if (baseDir != null) {
-			ctx.setBaseDir(new File(baseDir));
-		}
-
-		return ctx;
-	}
-
-	@Override
-	protected List<Runner> getChildren() {
-		List<Runner> children = new ArrayList<Runner>();
-		ActionJobContext parent = new ActionJobContext(null);
-
-		for (Block block : m_program.getBlocks()) {
-			ActionContext ctx = buildContext(parent, block);
-
-			if (block.getBlocks().isEmpty()) {
-				children.add(new LeafRunner(ctx, block));
-			} else {
-				try {
-					children.add(new NodeRunner(ctx, block));
-				} catch (InitializationError e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		return children;
-	}
-
-	private void register(Action action) {
-		m_actions.put(action.getName(), action);
 	}
 }

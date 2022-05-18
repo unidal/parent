@@ -3,7 +3,7 @@ package org.unidal.workspace.action;
 import java.util.List;
 
 import org.unidal.workspace.Action;
-import org.unidal.workspace.ActionContext;
+import org.unidal.workspace.BlockContext;
 
 /**
  * Display the messages to console.
@@ -11,9 +11,9 @@ import org.unidal.workspace.ActionContext;
  * @author qmwu2000
  */
 public class MessageAction implements Action {
-   public void execute(ActionContext ctx, List<String> messages) throws Exception {
+   public void execute(BlockContext ctx, List<String> messages) throws Exception {
       for (String message : messages) {
-         ctx.print(message);
+         ctx.out(message);
       }
    }
 

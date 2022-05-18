@@ -2,26 +2,32 @@
 <model model-package="org.unidal.workspace.program" enable-xml="true" enable-base-visitor="true">
    <entity name="program" root="true">
       <entity-ref name="block" type="list" names="blocks" method-find-or-create="true" />
+      <snippnet>
+         public Block findBlockById(String id) {
+            for (Block block : m_blocks) {
+               if (!equals(block.getId(), id)) {
+                  continue;
+               }
+      
+               return block;
+            }
+      
+            return null;
+         }
+      </snippnet>
    </entity>
    <entity name="block" dynamic-attributes="true">
       <attribute name="name" value-type="String" key="true" />
       <entity-ref name="instrument" type="list" names="instruments" method-find-or-create="true" />
       <entity-ref name="block" type="list" names="blocks" method-find-or-create="true" />
       <element name="parent" value-type="Block" render="false" />
+      <element name="depend-on-ref" names="depend-on-refs" value-type="Block" type="set" render="false" />
       <snippet><![CDATA[
          public Block getChildBlock(String name) {
             Block child = findOrCreateBlock(name);
 
             child.setParent(this);
             return child;
-         }
-
-         public List<String> getProjectDependOns() {
-            if (m_id != null) {
-               return m_dependOns;
-            } else {
-               return m_parent.getDependOns();
-            }
          }
 
          public Instrument newAction(String type) {

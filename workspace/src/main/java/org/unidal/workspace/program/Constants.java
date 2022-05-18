@@ -17,6 +17,8 @@ public class Constants {
 
    public static final String ATTR_TYPE = "type";
 
+   public static final String ATTR_UPDATED = "updated";
+
    public static final String ELEMENT_DEPEND_ON = "depend-on";
 
    public static final String ELEMENT_DEPEND_ONS = "depend-ons";

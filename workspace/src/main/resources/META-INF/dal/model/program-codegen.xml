@@ -22,6 +22,7 @@
     <attribute name="ignored" value-type="boolean" />
     <attribute name="skipped" value-type="boolean" />
     <attribute name="error" value-type="boolean" />
+    <attribute name="updated" value-type="boolean" />
     <element name="message" value-type="String" />
   </entity>
 </model>

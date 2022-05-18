@@ -11,6 +11,8 @@ public class Status extends BaseEntity<Status> {
 
    private Boolean m_error;
 
+   private Boolean m_updated;
+
    private String m_message;
 
    public Status() {
@@ -35,6 +37,10 @@ public class Status extends BaseEntity<Status> {
          }
 
          if (!equals(getError(), _o.getError())) {
+            return false;
+         }
+
+         if (!equals(getUpdated(), _o.getUpdated())) {
             return false;
          }
 
@@ -65,6 +71,10 @@ public class Status extends BaseEntity<Status> {
       return m_skipped;
    }
 
+   public Boolean getUpdated() {
+      return m_updated;
+   }
+
    @Override
    public int hashCode() {
       int hash = 0;
@@ -72,6 +82,7 @@ public class Status extends BaseEntity<Status> {
       hash = hash * 31 + (m_ignored == null ? 0 : m_ignored.hashCode());
       hash = hash * 31 + (m_skipped == null ? 0 : m_skipped.hashCode());
       hash = hash * 31 + (m_error == null ? 0 : m_error.hashCode());
+      hash = hash * 31 + (m_updated == null ? 0 : m_updated.hashCode());
       hash = hash * 31 + (m_message == null ? 0 : m_message.hashCode());
 
       return hash;
@@ -89,6 +100,10 @@ public class Status extends BaseEntity<Status> {
       return m_skipped != null && m_skipped.booleanValue();
    }
 
+   public boolean isUpdated() {
+      return m_updated != null && m_updated.booleanValue();
+   }
+
    @Override
    public void mergeAttributes(Status other) {
       if (other.getIgnored() != null) {
@@ -101,6 +116,10 @@ public class Status extends BaseEntity<Status> {
 
       if (other.getError() != null) {
          m_error = other.getError();
+      }
+
+      if (other.getUpdated() != null) {
+         m_updated = other.getUpdated();
       }
    }
 
@@ -121,6 +140,11 @@ public class Status extends BaseEntity<Status> {
 
    public Status setSkipped(Boolean skipped) {
       m_skipped = skipped;
+      return this;
+   }
+
+   public Status setUpdated(Boolean updated) {
+      m_updated = updated;
       return this;
    }
 

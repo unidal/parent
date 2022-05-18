@@ -5,14 +5,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.unidal.workspace.Action;
-import org.unidal.workspace.ActionContext;
+import org.unidal.workspace.BlockContext;
 
 /**
  * Check if any update there since last successful build.
@@ -20,11 +19,10 @@ import org.unidal.workspace.ActionContext;
  * @author qmwu2000
  */
 public class CheckUpdate implements Action {
-	public void execute(ActionContext ctx, List<String> args) throws Exception {
+	public void execute(BlockContext ctx, List<String> args) throws Exception {
 		String type = args.get(0);
 		File file = new File(ctx.getBaseDir(), "build.txt");
-		Path path = file.toPath();
-		List<String> lines = file.exists() ? Files.readAllLines(path) : Collections.emptyList();
+		List<String> lines = file.exists() ? Files.readAllLines(file.toPath()) : Collections.emptyList();
 
 		if ("start".equals(type)) {
 			String commitId = getLastCommitId(ctx);
@@ -34,28 +32,28 @@ public class CheckUpdate implements Action {
 				String second = lines.get(1);
 
 				if (first.equals(commitId) && second.equals("OK")) {
-					ctx.markAsIgnored();
+					ctx.markAsSkipped();
 					return;
 				}
 			}
 
-			ctx.print("Source update found.");
+			ctx.out("Source update found.");
 			ctx.markAsUpdated();
-			Files.write(path, commitId.getBytes());
+			Files.write(file.toPath(), commitId.getBytes());
 		} else if ("end".equals(type)) {
-			if (ctx.shouldSkipped()) {
+			if (ctx.shouldSkip()) {
 				return;
 			}
 
 			if (lines.size() == 1) {
 				String commitId = lines.get(0);
 
-				Files.write(path, (commitId + "\r\nOK").getBytes());
+				Files.write(file.toPath(), (commitId + "\r\nOK").getBytes());
 			}
 		}
 	}
 
-	private String getLastCommitId(ActionContext ctx) throws IOException, InterruptedException {
+	private String getLastCommitId(BlockContext ctx) throws IOException, InterruptedException {
 		String[] args = { "git", "rev-parse", "--short", "HEAD" };
 		Process process = new ProcessBuilder(args).directory(ctx.getBaseDir()).redirectErrorStream(true).start();
 		List<String> lines = waitFor(process);

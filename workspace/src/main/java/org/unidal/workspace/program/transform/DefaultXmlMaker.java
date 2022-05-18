@@ -8,6 +8,7 @@ import static org.unidal.workspace.program.Constants.ATTR_NAME;
 import static org.unidal.workspace.program.Constants.ATTR_ORDER;
 import static org.unidal.workspace.program.Constants.ATTR_SKIPPED;
 import static org.unidal.workspace.program.Constants.ATTR_TYPE;
+import static org.unidal.workspace.program.Constants.ATTR_UPDATED;
 
 import java.util.Map;
 import org.xml.sax.Attributes;
@@ -84,6 +85,7 @@ public class DefaultXmlMaker {
       String ignored = attributes.getValue(ATTR_IGNORED);
       String skipped = attributes.getValue(ATTR_SKIPPED);
       String error = attributes.getValue(ATTR_ERROR);
+      String updated = attributes.getValue(ATTR_UPDATED);
       Status status = new Status();
 
       if (ignored != null) {
@@ -96,6 +98,10 @@ public class DefaultXmlMaker {
 
       if (error != null) {
          status.setError(convert(Boolean.class, error, null));
+      }
+
+      if (updated != null) {
+         status.setUpdated(convert(Boolean.class, updated, null));
       }
 
       return status;

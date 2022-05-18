@@ -20,5 +20,5 @@ public interface Action {
     * @throws Exception
     *            thrown if any error occurs
     */
-   public void execute(ActionContext ctx, List<String> args) throws Exception;
+   public void execute(BlockContext ctx, List<String> args) throws Exception;
 }

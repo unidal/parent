@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import org.unidal.workspace.Action;
-import org.unidal.workspace.ActionContext;
+import org.unidal.workspace.BlockContext;
 
 /**
  * Check if the RSA security token exists for git operation.
@@ -12,7 +12,7 @@ import org.unidal.workspace.ActionContext;
  * @author qmwu2000
  */
 public class CheckSshKeys implements Action {
-   public void execute(ActionContext ctx, List<String> args) throws Exception {
+   public void execute(BlockContext ctx, List<String> args) throws Exception {
       String userDir = System.getProperty("user.home");
       File file = new File(userDir, ".ssh/id_rsa").getCanonicalFile();
 

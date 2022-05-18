@@ -6,8 +6,10 @@ import static org.unidal.workspace.program.Constants.ENTITY_BLOCK;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.unidal.workspace.program.BaseEntity;
 import org.unidal.workspace.program.IVisitor;
@@ -28,6 +30,8 @@ public class Block extends BaseEntity<Block> {
    private Status m_status;
 
    private transient Block m_parent;
+
+   private transient Set<Block> m_dependOnRefs = new LinkedHashSet<Block>();
 
    private Map<String, String> m_dynamicAttributes = new LinkedHashMap<String, String>();
 
@@ -50,6 +54,11 @@ public class Block extends BaseEntity<Block> {
 
    public Block addDependOn(String dependOn) {
       m_dependOns.add(dependOn);
+      return this;
+   }
+
+   public Block addDependOnRef(Block dependOnRef) {
+      m_dependOnRefs.add(dependOnRef);
       return this;
    }
 
@@ -112,6 +121,10 @@ public class Block extends BaseEntity<Block> {
 
    public List<Block> getBlocks() {
       return m_blocks;
+   }
+
+   public Set<Block> getDependOnRefs() {
+      return m_dependOnRefs;
    }
 
    public List<String> getDependOns() {

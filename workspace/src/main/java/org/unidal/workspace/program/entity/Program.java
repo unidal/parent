@@ -104,4 +104,16 @@ public class Program extends BaseEntity<Program> {
       return null;
    }
 
+	public Block findBlockById(String id) {
+		for (Block block : m_blocks) {
+         if (!equals(block.getId(), id)) {
+            continue;
+         }
+
+         return block;
+      }
+
+      return null;
+	}
+
 }

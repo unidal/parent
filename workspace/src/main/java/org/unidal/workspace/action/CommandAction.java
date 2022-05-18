@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.unidal.workspace.Action;
-import org.unidal.workspace.ActionContext;
+import org.unidal.workspace.BlockContext;
 
 /**
  * Execute shell command line via Java process invocation.
@@ -15,71 +15,77 @@ import org.unidal.workspace.ActionContext;
  * @author qmwu2000
  */
 public class CommandAction implements Action {
-   public void execute(ActionContext ctx, List<String> args) throws Exception {
-      showCommand(ctx, args);
+	private boolean m_dryRun = true;
 
-      long start = System.currentTimeMillis();
-      Process process = new ProcessBuilder(args).directory(ctx.getBaseDir()).redirectErrorStream(true).start();
+	public void execute(BlockContext ctx, List<String> args) throws Exception {
+		showCommand(ctx, args);
 
-      try {
-         waitFor(ctx, process);
-      } catch (Exception e) {
-         throw e;
-      } finally {
-         long ms = (System.currentTimeMillis() - start);
+		if (m_dryRun) {
+			return;
+		}
 
-         ctx.print(String.format("Done in %s ms", ms));
-         process.destroy();
-      }
-   }
+		long start = System.currentTimeMillis();
+		Process process = new ProcessBuilder(args).directory(ctx.getBaseDir()).redirectErrorStream(true).start();
 
-   @Override
-   public String getName() {
-      return "command";
-   }
+		try {
+			waitFor(ctx, process);
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			long ms = (System.currentTimeMillis() - start);
 
-   private void showCommand(ActionContext ctx, List<String> args) {
-      StringBuilder sb = new StringBuilder(256);
+			ctx.out(String.format("Done in %s ms", ms));
+			process.destroy();
+		}
+	}
 
-      sb.append("$ ");
+	@Override
+	public String getName() {
+		return "command";
+	}
 
-      for (String arg : args) {
-         sb.append(arg).append(' ');
-      }
+	private void showCommand(BlockContext ctx, List<String> args) {
+		StringBuilder sb = new StringBuilder(256);
 
-      ctx.print(sb.toString());
-   }
+		sb.append("$ ");
 
-   private void waitFor(ActionContext ctx, Process process) throws IOException, InterruptedException {
-      BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      boolean eof = false;
+		for (String arg : args) {
+			sb.append(arg).append(' ');
+		}
 
-      while (!eof) {
-         while (!eof && in.ready()) {
-            String line = in.readLine();
+		ctx.out(sb.toString());
+	}
 
-            if (line == null) {
-               eof = true;
-               in.close();
-               break;
-            } else {
-               ctx.print(line);
-            }
-         }
+	private void waitFor(BlockContext ctx, Process process) throws IOException, InterruptedException {
+		BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		boolean eof = false;
 
-         try {
-            int exitCode = process.exitValue();
+		while (!eof) {
+			while (!eof && in.ready()) {
+				String line = in.readLine();
 
-            if (exitCode != 0) {
-               throw new RuntimeException("Process exited with code " + exitCode);
-            } else {
-               return;
-            }
-         } catch (IllegalThreadStateException e) {
-            // ignore it
-         }
+				if (line == null) {
+					eof = true;
+					in.close();
+					break;
+				} else {
+					ctx.out(line);
+				}
+			}
 
-         TimeUnit.MILLISECONDS.sleep(500);
-      }
-   }
+			try {
+				int exitCode = process.exitValue();
+
+				if (exitCode != 0) {
+					throw new RuntimeException("Process exited with code " + exitCode);
+				} else {
+					return;
+				}
+			} catch (IllegalThreadStateException e) {
+				// ignore it
+			}
+
+			TimeUnit.MILLISECONDS.sleep(500);
+		}
+	}
 }
