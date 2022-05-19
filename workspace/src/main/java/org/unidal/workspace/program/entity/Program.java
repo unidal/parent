@@ -104,8 +104,9 @@ public class Program extends BaseEntity<Program> {
       return null;
    }
 
-	public Block findBlockById(String id) {
-		for (Block block : m_blocks) {
+   /********* Code Snippet Start *********/
+   public Block findBlockById(String id) {
+      for (Block block : m_blocks) {
          if (!equals(block.getId(), id)) {
             continue;
          }
@@ -114,6 +115,7 @@ public class Program extends BaseEntity<Program> {
       }
 
       return null;
-	}
+   }
 
+   /********* Code Snippet End *********/
 }

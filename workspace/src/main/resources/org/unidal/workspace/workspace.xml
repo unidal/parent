@@ -56,7 +56,7 @@
       </depend-on>
       <jdk-version>17</jdk-version>
    </project>
-   <project name="tulip">
+   <project name="tulip" type="war">
       <git-url>git@gitee.com:unidal/tulip.git</git-url>
       <mvn-test-args>-Dmaven.test.skip</mvn-test-args>
       <depend-on>

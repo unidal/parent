@@ -404,7 +404,7 @@ public class WorkspaceRunner extends Suite {
 				// mvn test
 				{
 					Block step = codeAndTest.getChildBlock("run the unit tests");
-					Instrument inst = step.newCommand().withProperties("mvn", "test");
+					Instrument inst = step.newCommand().withProperties("mvn", "clean", "test");
 
 					if (project.getMvnTestArgs() != null) {
 						inst.addProperty(project.getMvnTestArgs());
@@ -413,8 +413,8 @@ public class WorkspaceRunner extends Suite {
 
 				// mvn install
 				{
-					Block step = codeAndTest.getChildBlock("clean install the artifacts");
-					Instrument inst = step.newCommand().withProperties("mvn", "clean", "install", "-Dmaven.test.skip");
+					Block step = codeAndTest.getChildBlock("install the artifacts");
+					Instrument inst = step.newCommand().withProperties("mvn", "install", "-Dmaven.test.skip");
 
 					if (project.getMvnInstallArgs() != null) {
 						inst.addProperty(project.getMvnInstallArgs());

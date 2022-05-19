@@ -2,7 +2,7 @@
 <model model-package="org.unidal.workspace.program" enable-xml="true" enable-base-visitor="true">
    <entity name="program" root="true">
       <entity-ref name="block" type="list" names="blocks" method-find-or-create="true" />
-      <snippnet>
+      <snippet>
          public Block findBlockById(String id) {
             for (Block block : m_blocks) {
                if (!equals(block.getId(), id)) {
@@ -14,7 +14,7 @@
       
             return null;
          }
-      </snippnet>
+      </snippet>
    </entity>
    <entity name="block" dynamic-attributes="true">
       <attribute name="name" value-type="String" key="true" />

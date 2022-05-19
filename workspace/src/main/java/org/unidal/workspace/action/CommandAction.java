@@ -15,7 +15,7 @@ import org.unidal.workspace.BlockContext;
  * @author qmwu2000
  */
 public class CommandAction implements Action {
-	private boolean m_dryRun = true;
+	private boolean m_dryRun = false;
 
 	public void execute(BlockContext ctx, List<String> args) throws Exception {
 		showCommand(ctx, args);

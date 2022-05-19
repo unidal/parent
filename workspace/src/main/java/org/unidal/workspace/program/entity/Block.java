@@ -239,14 +239,6 @@ public class Block extends BaseEntity<Block> {
       return child;
    }
 
-   public List<String> getProjectDependOns() {
-      if (m_id != null) {
-         return m_dependOns;
-      } else {
-         return m_parent.getDependOns();
-      }
-   }
-
    public Instrument newAction(String type) {
       Instrument instrument = new Instrument().setType(type);
 
