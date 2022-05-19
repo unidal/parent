@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<wizard package="org.unidal.workspace">
-   <model package="org.unidal.workspace.model" name="workspace">
-      <sample-model>src/test/resources/org/unidal/workspace/workspace-sample.xml</sample-model>
-   </model>
-   <model package="org.unidal.workspace.program" name="program">
-      <sample-model>src/test/resources/org/unidal/workspace/program.xml</sample-model>
-   </model>
-</wizard>
