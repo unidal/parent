@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.unidal</groupId>
 	<artifactId>parent</artifactId>
-	<version>2.0.0</version>
+	<version>3.0</version>
 	<packaging>pom</packaging>
 	<name>Unidal Parent POM</name>
 	<url>https://gitee.com/unidal/parent</url>
@@ -35,7 +35,7 @@
 	</developers>
 	<properties>
 		<project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
-      <jdk.version>1.7</jdk.version>
+      <java.version>1.8</java.version>
 	</properties>
 	<build>
 		<pluginManagement>
@@ -45,8 +45,8 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.7.0</version>
 					<configuration>
-						<source>${jdk.version}</source>
-						<target>${jdk.version}</target>
+						<source>${java.version}</source>
+						<target>${java.version}</target>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -92,7 +92,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.22.0</version>
+					<version>2.22.2</version>
 					<configuration>
 						<!-- use -Dmaven.surefire.debug for remote debug -->
 						<includes>
@@ -104,7 +104,7 @@
 						<dependency>
 							<groupId>org.apache.maven.surefire</groupId>
 							<artifactId>surefire-junit47</artifactId>
-							<version>2.22.0</version>
+							<version>2.22.2</version>
 						</dependency>
 					</dependencies>
 				</plugin>
@@ -125,9 +125,9 @@
                         <name>.settings/org.eclipse.jdt.core.prefs</name>
                         <content><![CDATA[
                            eclipse.preferences.version=1
-                           org.eclipse.jdt.core.compiler.codegen.targetPlatform=${jdk.version}
-                           org.eclipse.jdt.core.compiler.source=${jdk.version}
-                           org.eclipse.jdt.core.compiler.compliance=${jdk.version}
+                           org.eclipse.jdt.core.compiler.codegen.targetPlatform=${java.version}
+                           org.eclipse.jdt.core.compiler.source=${java.version}
+                           org.eclipse.jdt.core.compiler.compliance=${java.version}
                         ]]></content>
                      </file>
                      <file>
