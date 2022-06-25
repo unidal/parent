@@ -8,6 +8,7 @@
 	<packaging>pom</packaging>
 	<name>Unidal Parent POM</name>
 	<url>https://gitee.com/unidal/parent</url>
+	<description>Unidal Parent</description>
 	<scm>
 		<connection>scm:git:git://gitee.com/unidal/parent.git</connection>
 		<developerConnection>scm:git:ssh://git@gitee.com/unidal/parent.git</developerConnection>
@@ -209,9 +210,9 @@
 						<artifactId>nexus-staging-maven-plugin</artifactId>
 						<extensions>true</extensions>
 						<configuration>
-							<serverId>sonatype-nexus-staging</serverId>
+							<serverId>ossrh</serverId>
 							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+							<autoReleaseAfterClose>false</autoReleaseAfterClose>
 						</configuration>
 					</plugin>
 					<plugin>
